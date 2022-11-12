@@ -3,6 +3,7 @@
 //
 #pragma once
 #include <math.h>
+#include <Eigen/Dense>
 
 #ifndef RAYCASTER_MATHUTILS_H
 #define RAYCASTER_MATHUTILS_H

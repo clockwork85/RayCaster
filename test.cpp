@@ -3,7 +3,7 @@
 //
 
 #include <gtest/gtest.h>
-#include "Eigen/Dense"
+#include <Eigen/Dense>
 #include "MathUtils.h"
 #include "Canvas.h"
 
