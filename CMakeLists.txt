@@ -18,21 +18,25 @@ endif()
 
 FetchContent_Declare(
         Eigen
-        GIT_REPOSITORY http://gitlab.com/libeigen/eigen.git
+        GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
         GIT_TAG master
         GIT_SHALLOW TRUE
         GIT_PROGRESS TRUE
         )
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
-set(EIGEN_BUILD_DOC OFF)
+set(BUILD_TESTING OFF)
 set(EIGEN_BUILD_PKGCONFIG OFF)
 FetchContent_MakeAvailable(Eigen)
 
-add_library(MathUtils mathUtils.cpp mathUtils.h)
-add_library(Canvas Canvas.cpp Canvas.h)
+add_library(MathUtils STATIC MathUtils.cpp MathUtils.h)
+target_link_libraries(MathUtils Eigen3::Eigen)
+add_library(Canvas STATIC Canvas.cpp Canvas.h)
+target_link_libraries(Canvas MathUtils)
+add_library(Ray STATIC RayCaster.cpp RayCaster.h)
+target_link_libraries(Ray MathUtils Eigen3::Eigen)
 
 add_executable(RayCaster main.cpp)
-target_link_libraries(RayCaster MathUtils Canvas Eigen3::Eigen)
+target_link_libraries(RayCaster MathUtils Canvas Ray Eigen3::Eigen)
 
 add_executable(RayCasterTest test.cpp)
-target_link_libraries(RayCasterTest gtest gtest_main gmock gmock_main MathUtils Canvas Eigen3::Eigen)
+target_link_libraries(RayCasterTest gtest gtest_main gmock gmock_main MathUtils Canvas Ray Eigen3::Eigen)
