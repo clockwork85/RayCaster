@@ -8,6 +8,8 @@
 #include "MathUtils.h"
 #include "Canvas.h"
 #include "Color.h"
+#include "Lights.h"
+#include "Material.h"
 #include "RayCaster.h"
 #include "Sphere.h"
 #include "Transform.h"
@@ -755,6 +757,160 @@ TEST(TestSphereTransforms, TestIntersectingATranslatedSphereWithRay) {
     EXPECT_EQ(intersections.size(), 0);
     EXPECT_EQ(s.center, create_point(5, 0, 0));
 }
+
+TEST(TestLighting, TestNormalOnASphereAtAPointOnTheXAxis) {
+    Sphere s = Sphere();
+    Vector4f world_point = create_point(1, 0, 0);
+    Vector4f normal = normal_at(&s, world_point);
+    EXPECT_EQ(normal, create_vector(1, 0, 0));
+}
+
+TEST(TestLighting, TestNormalOnASphereAtPointOnTheYAxis) {
+    Sphere s = Sphere();
+    Vector4f world_point = create_point(0, 1, 0);
+    Vector4f normal = normal_at(&s, world_point);
+    EXPECT_EQ(normal, create_vector(0, 1, 0));
+}
+
+TEST(TestLighting, TestNormalOnASphereAtAPointOnTheZAxis) {
+    Sphere s = Sphere();
+    Vector4f world_point = create_point(0, 0, 1);
+    Vector4f normal = normal_at(&s, world_point);
+    EXPECT_EQ(normal, create_vector(0, 0, 1));
+}
+
+TEST(TestLighting, TestNormalOnASphereAtAPointOnNonAxialPoint) {
+    Sphere s = Sphere();
+    Vector4f world_point = create_point(sqrt(3)/3, sqrt(3)/3, sqrt(3)/3);
+    Vector4f normal = normal_at(&s, world_point);
+    EXPECT_TRUE(normal.isApprox(create_vector(sqrt(3)/3, sqrt(3)/3, sqrt(3)/3)));
+}
+
+TEST(TestLighting, TestNormalIsANormalizedVector) {
+    Sphere s = Sphere();
+    Vector4f world_point = create_point(sqrt(3)/3, sqrt(3)/3, sqrt(3)/3);
+    Vector4f normal = normal_at(&s, world_point);
+    EXPECT_TRUE(normal.isApprox(normal.normalized()));
+}
+
+TEST(TestLighting, TestComputingTheNormalOnATranslatedSphere) {
+    Sphere s = Sphere();
+    Matrix4f translation = Transform::translate(0, 1, 0);
+    s.set_transform(translation);
+    Vector4f world_point = create_point(0, 1.70711, -0.70711);
+    Vector4f normal = normal_at(&s, world_point);
+    EXPECT_TRUE(normal.isApprox(create_vector(0, 0.70711, -0.70711)));
+}
+
+TEST(TestLighting, TestComputingTheNormalOnATransformedSphere) {
+    Sphere s = Sphere();
+    Matrix4f t = Transformation::identity()
+            .rotate_z(M_PI/5)
+            .scale(1, 0.5, 1)
+            .matrix();
+    s.set_transform(t);
+    Vector4f world_point = create_point(0, sqrt(2)/2, -sqrt(2)/2);
+    Vector4f normal = normal_at(&s, world_point);
+    EXPECT_TRUE(normal.isApprox(create_vector(0, 0.97014, -0.24254)));
+}
+
+TEST(TestLighting, TestReflectionAt45Degrees) {
+    Vector4f v = create_vector(1, -1, 0);
+    Vector4f n = create_vector(0, 1, 0);
+    Vector4f r = reflect(v, n);
+    EXPECT_TRUE(r.isApprox(create_vector(1, 1, 0)));
+}
+
+TEST(TestLighting, TestReflectionOffSlantedSurface) {
+    Vector4f v = create_vector(0, -1, 0);
+    Vector4f n = create_vector(sqrt(2)/2, sqrt(2)/2, 0);
+    Vector4f r = reflect(v, n);
+    EXPECT_TRUE(r.isApprox(create_vector(1, 0, 0)));
+}
+
+TEST(TestLighting, TestPointLightHasAPositionAndIntensity) {
+    PointLight light = PointLight(create_point(0, 0, 0), Color(1, 1, 1));
+    EXPECT_TRUE(light.position() == create_point(0, 0, 0));
+    EXPECT_TRUE(light.intensity() == Color(1, 1, 1));
+}
+
+TEST(TestLighting, TestDefaultMaterial) {
+    Material m = Material();
+    EXPECT_TRUE(m.color == Color(1, 1, 1));
+    EXPECT_FLOAT_EQ(m.ambient, 0.1);
+    EXPECT_FLOAT_EQ(m.diffuse, 0.9);
+    EXPECT_FLOAT_EQ(m.specular, 0.9);
+    EXPECT_FLOAT_EQ(m.shininess, 200.0);
+}
+
+TEST(TestLighting, TestSphereHasADefaultMaterial) {
+    Sphere s = Sphere();
+    Material m = s.material;
+    EXPECT_TRUE(m.color == Color(1, 1, 1));
+    EXPECT_FLOAT_EQ(m.ambient, 0.1);
+    EXPECT_FLOAT_EQ(m.diffuse, 0.9);
+    EXPECT_FLOAT_EQ(m.specular, 0.9);
+    EXPECT_FLOAT_EQ(m.shininess, 200.0);
+}
+
+TEST(TestLighting, TestSphereMustBeAssignedAMaterial) {
+    Sphere s = Sphere();
+    Material m = Material();
+    m.ambient = 1;
+    s.material = m;
+    EXPECT_TRUE(s.material == m);
+}
+
+TEST(TestLighting, TestLightingWithEyeBetweenLightAndSurface) {
+    Material m = Material();
+    Vector4f position = create_point(0, 0, 0);
+    PointLight light = PointLight(create_point(0, 0, -10), Color(1, 1, 1));
+    Vector4f eyev = create_vector(0, 0, -1);
+    Vector4f normalv = create_vector(0, 0, -1);
+    Color result = lighting(m,  light, position, eyev, normalv);
+    EXPECT_TRUE(result == Color(1.9, 1.9, 1.9));
+}
+
+TEST(TestLighting, TestLightingWithTheEyeBetweenLightAndSurfaceOffset45) {
+    Material m = Material();
+    Vector4f position = create_point(0, 0, 0);
+    PointLight light = PointLight(create_point(0, 0, -10), Color(1, 1, 1));
+    Vector4f eyev = create_vector(0, sqrt(2)/2, -sqrt(2)/2);
+    Vector4f normalv = create_vector(0, 0, -1);
+    Color result = lighting(m,  light, position, eyev, normalv);
+    EXPECT_TRUE(result == Color(1.0, 1.0, 1.0));
+}
+
+TEST(TestLighting, TestLightingWithEyeOppositeSurfaceLightOffset45) {
+    Material m = Material();
+    Vector4f position = create_point(0, 0, 0);
+    PointLight light = PointLight(create_point(0, 10, -10), Color(1, 1, 1));
+    Vector4f eyev = create_vector(0, 0, -1);
+    Vector4f normalv = create_vector(0, 0, -1);
+    Color result = lighting(m,  light, position, eyev, normalv);
+    EXPECT_TRUE(result == Color(0.7364, 0.7364, 0.7364));
+}
+
+TEST(TestLighting, TestLightingWithEyeInThePathOftheReflectionVector) {
+    Material m = Material();
+    Vector4f position = create_point(0, 0, 0);
+    PointLight light = PointLight(create_point(0, 10, -10), Color(1, 1, 1));
+    Vector4f eyev = create_vector(0, -sqrt(2)/2, -sqrt(2)/2);
+    Vector4f normalv = create_vector(0, 0, -1);
+    Color result = lighting(m,  light, position, eyev, normalv);
+    EXPECT_TRUE(result.isApprox(Color(1.6364, 1.6364, 1.6364)));
+}
+
+TEST(TestLighting, TestLightingWithTheLightBehindTheSurface) {
+    Material m = Material();
+    Vector4f position = create_point(0, 0, 0);
+    PointLight light = PointLight(create_point(0, 0, 10), Color(1, 1, 1));
+    Vector4f eyev = create_vector(0, 0, -1);
+    Vector4f normalv = create_vector(0, 0, -1);
+    Color result = lighting(m,  light, position, eyev, normalv);
+    EXPECT_TRUE(result == Color(0.1, 0.1, 0.1));
+}
+
 
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);

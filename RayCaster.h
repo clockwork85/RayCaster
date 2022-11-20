@@ -5,6 +5,7 @@
 #ifndef RAYCASTER_RAYCASTER_H
 #define RAYCASTER_RAYCASTER_H
 
+#include "Lights.h"
 #include "MathUtils.h"
 #include "Sphere.h"
 #include <Eigen/Dense>
@@ -64,13 +65,17 @@ std::vector<Intersection> intersect(Sphere* sphere, Ray& ray) {
     return intersections;
 }
 
-//Vector4f normal_at(Sphere* sphere, Vector4f& world_point) {
-//    Vector4f object_point = sphere->inverse() * world_point;
-//    Vector4f object_normal = object_point - create_point(0.0f, 0.0f, 0.0f);
-//    Vector4f world_normal = sphere->inverse().transpose() * object_normal;
-//    world_normal(3) = 0.0f;
-//    return world_normal.normalized();
-//}
+Vector4f normal_at(Sphere* sphere, Vector4f& world_point) {
+    Vector4f object_point = sphere->inverse() * world_point;
+    Vector4f object_normal = object_point - create_point(0.0f, 0.0f, 0.0f);
+    Vector4f world_normal = sphere->inverse().transpose() * object_normal;
+    world_normal(3) = 0.0f;
+    return world_normal.normalized();
+}
+
+Vector4f reflect(Vector4f& in, Vector4f& normal) {
+    return in - (normal * 2 * in.dot(normal));
+}
 
 Intersection hit(std::vector<Intersection> intersections) {
     Intersection closest = Intersection();
@@ -82,6 +87,30 @@ Intersection hit(std::vector<Intersection> intersections) {
     return closest;
 }
 
+Color lighting(Material& material, PointLight& light, Vector4f& position, Vector4f& eye, Vector4f& normal) {
+    Color effective_color = material.color * light.intensity();
+    Vector4f lightv = (light.position() - position).normalized();
+    float light_dot_normal = lightv.dot(normal);
+    Color ambient = effective_color * material.ambient;
+    Color diffuse;
+    Color specular;
+    if (light_dot_normal < 0) {
+        diffuse = Color(0.0f, 0.0f, 0.0f);
+        specular = Color(0.0f, 0.0f, 0.0f);
+    } else {
+        diffuse = effective_color * material.diffuse * light_dot_normal;
+        Vector4f inv_light_vector = -lightv;
+        Vector4f reflect_vector = reflect(inv_light_vector, normal);
+        float reflect_dot_eye = reflect_vector.dot(eye);
+        if (reflect_dot_eye <= 0) {
+            specular = Color(0.0f, 0.0f, 0.0f);
+        } else {
+            float factor = pow(reflect_dot_eye, material.shininess);
+            specular = light.intensity() * material.specular * factor;
+        }
+    }
+    return ambient + diffuse + specular;
+}
 
 
 

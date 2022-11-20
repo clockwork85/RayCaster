@@ -7,6 +7,7 @@
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
+#include "Material.h"
 #include "Transform.h"
 
 using Vector4f = Eigen::Vector4f;
@@ -14,11 +15,12 @@ using Matrix4f = Eigen::Matrix4f;
 
 class Sphere {
 public:
-    Sphere() : center(0.0f, 0.0f, 0.0f, 1.0f) {}
+    Sphere() : center(0.0f, 0.0f, 0.0f, 1.0f), material(Material()) {}
 
     float id = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
     // Center of the sphere is the translation of the transform
     Vector4f center = get_center();
+    Material material;
 
     Vector4f get_center() {
         return Vector4f(m_transform(0, 3), m_transform(1, 3), m_transform(2, 3), 1.0f);
@@ -44,6 +46,7 @@ public:
 private:
     Matrix4f m_transform { Matrix4f::Identity() };
     Matrix4f m_inverse { Matrix4f::Identity() };
+
 };
 
 
