@@ -13,6 +13,7 @@
 #include "RayCaster.h"
 #include "Sphere.h"
 #include "Transform.h"
+#include "World.h"
 
 using Vector3f = Eigen::Vector3f;
 using Vector4f = Eigen::Vector4f;
@@ -732,7 +733,7 @@ TEST(TestSphereTransforms, TestDefaultTransformationIsIdentityMatrix)  {
 TEST(TestSphereTransforms, TestAssigningATransformation) {
     Sphere s = Sphere();
     Matrix4f translation = Transform::translate(2, 3, 4);
-    s.set_transform(translation);
+    s.transform(translation);
     EXPECT_TRUE(s.matrix() == translation.matrix());
     EXPECT_TRUE(s.center == create_point(2, 3, 4));
 }
@@ -741,7 +742,7 @@ TEST(TestSphereTransforms, TestIntersectingAScaledSphereWithRay) {
     Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
     Sphere s = Sphere();
     Matrix4f scale = Transform::scale(2, 2, 2);
-    s.set_transform(scale   );
+    s.transform(scale   );
     std::vector<Intersection> intersections = intersect(&s, r);
     EXPECT_EQ(intersections.size(), 2);
     EXPECT_EQ(intersections[0].t, 3);
@@ -752,7 +753,7 @@ TEST(TestSphereTransforms, TestIntersectingATranslatedSphereWithRay) {
     Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
     Sphere s = Sphere();
     Matrix4f translation = Transform::translate(5, 0, 0);
-    s.set_transform(translation);
+    s.transform(translation);
     std::vector<Intersection> intersections = intersect(&s, r);
     EXPECT_EQ(intersections.size(), 0);
     EXPECT_EQ(s.center, create_point(5, 0, 0));
@@ -796,7 +797,7 @@ TEST(TestLighting, TestNormalIsANormalizedVector) {
 TEST(TestLighting, TestComputingTheNormalOnATranslatedSphere) {
     Sphere s = Sphere();
     Matrix4f translation = Transform::translate(0, 1, 0);
-    s.set_transform(translation);
+    s.transform(translation);
     Vector4f world_point = create_point(0, 1.70711, -0.70711);
     Vector4f normal = normal_at(&s, world_point);
     EXPECT_TRUE(normal.isApprox(create_vector(0, 0.70711, -0.70711)));
@@ -808,7 +809,7 @@ TEST(TestLighting, TestComputingTheNormalOnATransformedSphere) {
             .rotate_z(M_PI/5)
             .scale(1, 0.5, 1)
             .matrix();
-    s.set_transform(t);
+    s.transform(t);
     Vector4f world_point = create_point(0, sqrt(2)/2, -sqrt(2)/2);
     Vector4f normal = normal_at(&s, world_point);
     EXPECT_TRUE(normal.isApprox(create_vector(0, 0.97014, -0.24254)));
@@ -909,6 +910,119 @@ TEST(TestLighting, TestLightingWithTheLightBehindTheSurface) {
     Vector4f normalv = create_vector(0, 0, -1);
     Color result = lighting(m,  light, position, eyev, normalv);
     EXPECT_TRUE(result == Color(0.1, 0.1, 0.1));
+}
+
+TEST(TestWorld, TestCreatingAWorld) {
+    World w = World();
+    EXPECT_TRUE(w.objects.size() == 0);
+    EXPECT_TRUE(w.lights.size() == 0);
+}
+
+TEST(TestWorld, TestTheDefaultWorld) {
+    World w = default_world();
+    EXPECT_TRUE(w.lights.size() == 1);
+    EXPECT_TRUE(w.lights[0] == PointLight(create_point(-10, 10, -10), Color(1, 1, 1)));
+    EXPECT_TRUE(w.objects.size() == 2);
+    EXPECT_TRUE(w.objects[0].material.color == Color(0.8, 1.0, 0.6));
+    EXPECT_FLOAT_EQ(w.objects[0].material.diffuse, 0.7);
+    EXPECT_FLOAT_EQ(w.objects[0].material.specular, 0.2);
+    EXPECT_TRUE(w.objects[1].material.color == Color(1.0, 1.0, 1.0));
+    EXPECT_FLOAT_EQ(w.objects[1].material.ambient, 0.1);
+    EXPECT_FLOAT_EQ(w.objects[1].material.diffuse, 0.9);
+    EXPECT_FLOAT_EQ(w.objects[1].material.specular, 0.9);
+    EXPECT_FLOAT_EQ(w.objects[1].material.shininess, 200.0);
+    EXPECT_TRUE(w.objects[1].matrix() == Transform::scale(0.5, 0.5, 0.5).matrix());
+}
+
+TEST(TestWorld, TestIntersectWorldWithARay) {
+    World w = default_world();
+    Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
+    std::vector<Intersection> xs = intersect_world(w, r);
+    EXPECT_TRUE(xs.size() == 4);
+    EXPECT_FLOAT_EQ(xs[0].t, 4);
+    EXPECT_FLOAT_EQ(xs[1].t, 4.5);
+    EXPECT_FLOAT_EQ(xs[2].t, 5.5);
+    EXPECT_FLOAT_EQ(xs[3].t, 6);
+}
+
+TEST(TestWorld, TestPrecomputeStateOfIntersection) {
+    World w = default_world();
+    Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
+    Sphere shape = w.objects[0];
+    Intersection i = Intersection(4, &shape);
+    Computation comps = prepare_computations(i, r);
+    EXPECT_TRUE(comps.t == i.t);
+    EXPECT_TRUE(comps.object == i.object);
+    EXPECT_TRUE(comps.point == create_point(0, 0, -1));
+    EXPECT_TRUE(comps.eyev == create_vector(0, 0, -1));
+    EXPECT_TRUE(comps.normalv == create_vector(0, 0, -1));
+}
+
+TEST(TestWorld, TestIntersectionOccursOnTheOutside) {
+    World w = default_world();
+    Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
+    Sphere shape = w.objects[0];
+    Intersection i = Intersection(4, &shape);
+    Computation comps = prepare_computations(i, r);
+    EXPECT_FALSE(comps.inside);
+}
+
+TEST(TestWorld, TestIntersectionOccursOnTheInside) {
+    World w = default_world();
+    Ray r = Ray(create_point(0, 0, 0), create_vector(0, 0, 1));
+    Sphere shape = w.objects[0];
+    Intersection i = Intersection(1, &shape);
+    Computation comps = prepare_computations(i, r);
+    EXPECT_TRUE(comps.point == create_point(0, 0, 1));
+    EXPECT_TRUE(comps.eyev == create_vector(0, 0, -1));
+    EXPECT_TRUE(comps.inside);
+    EXPECT_TRUE(comps.normalv == create_vector(0, 0, -1));
+}
+
+TEST(TestWorld, TestShadingAnIntersection) {
+    World w = default_world();
+    std::cout << "w.lights[0].position() = " << w.lights[0].position() << std::endl;
+    Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
+    Sphere shape = w.objects[0];
+    Intersection i = Intersection(4, &shape);
+    Computation comps = prepare_computations(i, r);
+    Color c = shade_hit(w, comps);
+    EXPECT_TRUE(c == Color(0.38066, 0.47583, 0.2855));
+}
+
+TEST(TestWorld, TestShadingIntersectionFromInside) {
+    World w = default_world();
+    w.lights.clear();
+    w.lights.emplace_back(PointLight(create_point(0, 0.25, 0), Color(1, 1, 1)));
+    Ray r = Ray(create_point(0, 0, 0), create_vector(0, 0, 1));
+    Sphere shape = w.objects[1];
+    Intersection i = Intersection(0.5, &shape);
+    Computation comps = prepare_computations(i, r);
+    Color c = shade_hit(w, comps);
+    EXPECT_TRUE(c == Color(0.90498, 0.90498, 0.90498));
+}
+
+TEST(TestWorld, TestColorWhenRayMisses) {
+    World w = default_world();
+    Ray r = Ray(create_point(0, 0, -5), create_vector(0, 1, 0));
+    Color c = color_at(w, r);
+    EXPECT_TRUE(c == Color(0, 0, 0));
+}
+
+TEST(TestWorld, TestColorWhenARayHits) {
+    World w = default_world();
+    Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
+    Color c = color_at(w, r);
+    EXPECT_TRUE(c == Color(0.38066, 0.47583, 0.2855));
+}
+
+TEST(TestWorld, TestColorWithAnIntersectionBehindTheRay) {
+    World w = default_world();
+    w.objects[0].material.ambient = 1;
+    w.objects[1].material.ambient = 1;
+    Ray r = Ray(create_point(0, 0, 0.75), create_vector(0, 0, -1));
+    Color c = color_at(w, r);
+    EXPECT_TRUE(c == w.objects[1].material.color);
 }
 
 

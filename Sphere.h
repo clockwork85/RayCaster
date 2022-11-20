@@ -26,11 +26,17 @@ public:
         return Vector4f(m_transform(0, 3), m_transform(1, 3), m_transform(2, 3), 1.0f);
     }
 
-    void set_transform(Matrix4f t) {
-        m_transform = t.matrix();
+    void transform(Matrix4f& transform) {
+        m_transform = transform.matrix() * m_transform;
         m_inverse = m_transform.inverse();
         center = get_center();
     }
+
+//    void set_transform(Matrix4f t) {
+//        m_transform = t.matrix();
+//        m_inverse = m_transform.inverse();
+//        center = get_center();
+//    }
 
     Matrix4f matrix() const {
         return m_transform;

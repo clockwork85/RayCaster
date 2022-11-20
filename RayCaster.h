@@ -8,6 +8,7 @@
 #include "Lights.h"
 #include "MathUtils.h"
 #include "Sphere.h"
+#include "World.h"
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 #include <vector>
@@ -65,6 +66,24 @@ std::vector<Intersection> intersect(Sphere* sphere, Ray& ray) {
     return intersections;
 }
 
+std::vector<Intersection> intersect_world(World& world, Ray& ray) {
+    std::vector<Intersection> intersections;
+    for (Sphere& sphere : world.objects) {
+        std::vector<Intersection> sphere_intersections = intersect(&sphere, ray);
+        // Put all intersections into one vector
+        for ( const Intersection& intersection : sphere_intersections) {
+            intersections.emplace_back(intersection);
+        }
+    }
+
+    // Sort intersections by t
+    std::sort(intersections.begin(), intersections.end(), [](const Intersection& a, const Intersection& b) {
+        return a.t < b.t;
+    });
+
+    return intersections;
+}
+
 Vector4f normal_at(Sphere* sphere, Vector4f& world_point) {
     Vector4f object_point = sphere->inverse() * world_point;
     Vector4f object_normal = object_point - create_point(0.0f, 0.0f, 0.0f);
@@ -89,8 +108,8 @@ Intersection hit(std::vector<Intersection> intersections) {
 
 Color lighting(Material& material, PointLight& light, Vector4f& position, Vector4f& eye, Vector4f& normal) {
     Color effective_color = material.color * light.intensity();
-    Vector4f lightv = (light.position() - position).normalized();
-    float light_dot_normal = lightv.dot(normal);
+    Vector4f light_vector = (light.position() - position).normalized();
+    float light_dot_normal = light_vector.dot(normal);
     Color ambient = effective_color * material.ambient;
     Color diffuse;
     Color specular;
@@ -99,7 +118,7 @@ Color lighting(Material& material, PointLight& light, Vector4f& position, Vector
         specular = Color(0.0f, 0.0f, 0.0f);
     } else {
         diffuse = effective_color * material.diffuse * light_dot_normal;
-        Vector4f inv_light_vector = -lightv;
+        Vector4f inv_light_vector = -light_vector;
         Vector4f reflect_vector = reflect(inv_light_vector, normal);
         float reflect_dot_eye = reflect_vector.dot(eye);
         if (reflect_dot_eye <= 0) {
@@ -112,6 +131,68 @@ Color lighting(Material& material, PointLight& light, Vector4f& position, Vector
     return ambient + diffuse + specular;
 }
 
+
+
+class Computation {
+public:
+    Computation() : t(0.0f), object(nullptr) {}
+    Computation(float t, Sphere* object, Vector4f& point, Vector4f& eyev, Vector4f& normalv, bool inside) : t(t), object(object), point(point), eyev(eyev), normalv(normalv), inside(inside) {}
+
+    float t;
+    Sphere* object;
+    Vector4f point;
+    Vector4f eyev;
+    Vector4f normalv;
+    bool inside;
+
+    bool is_inside() {
+        return inside;
+    }
+
+    Vector4f over_point() {
+        Vector4f offset = normalv * 0.0001f;
+        return point + offset;
+    }
+
+    Vector4f under_point() {
+        Vector4f offset = normalv * -0.0001f;
+        return point + offset;
+    }
+
+    Vector4f reflectv() {
+        return reflect(eyev, normalv);
+    }
+};
+
+Computation prepare_computations(Intersection& intersection, Ray& ray) {
+    Vector4f point = ray.position(intersection.t);
+    Vector4f eye = -ray.direction;
+    Vector4f normal = normal_at(intersection.object, point);
+    bool inside = false;
+    if (normal.dot(eye) < 0) {
+        inside = true;
+        normal = -normal;
+    }
+    return Computation(intersection.t, intersection.object, point, eye, normal, inside);
+}
+
+Color shade_hit(World& world, Computation& comps) {
+    Color surface = Color(0.0f, 0.0f, 0.0f);
+    for (PointLight& light : world.lights) {
+        surface = surface + lighting(comps.object->material, light, comps.point, comps.eyev, comps.normalv);
+    }
+    return surface;
+}
+
+Color color_at(World& world, Ray& ray) {
+    std::vector<Intersection> intersections = intersect_world(world, ray);
+    Intersection intersection = hit(intersections);
+    if (intersection.t == 0) {
+        return Color(0.0f, 0.0f, 0.0f);
+    }
+    Computation comps = prepare_computations(intersection, ray);
+    return shade_hit(world, comps);
+}
 
 
 #endif //RAYCASTER_RAYCASTER_H

@@ -40,9 +40,11 @@ add_library(Color STATIC Color.h Color.cpp)
 target_link_libraries(Color MathUtils Eigen3::Eigen)
 add_library(Lights STATIC Lights.h Lights.cpp)
 target_link_libraries(Lights MathUtils Color Eigen3::Eigen)
+add_library(World STATIC World.h World.cpp)
+target_link_libraries(World MathUtils Color Ray Transform Canvas Lights Eigen3::Eigen)
 
 add_executable(RayCaster main.cpp)
-target_link_libraries(RayCaster MathUtils Canvas Ray Eigen3::Eigen)
+target_link_libraries(RayCaster MathUtils Canvas Ray World Eigen3::Eigen)
 
 add_executable(RayCasterTest test.cpp Material.h)
-target_link_libraries(RayCasterTest gtest gtest_main gmock gmock_main MathUtils Canvas Ray Transform Lights Eigen3::Eigen)
+target_link_libraries(RayCasterTest gtest gtest_main gmock gmock_main MathUtils Canvas Ray Transform Lights World Eigen3::Eigen)

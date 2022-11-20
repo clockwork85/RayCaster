@@ -20,6 +20,11 @@ public:
     const Vector4f& position() const { return m_position; };
     const Color& intensity() const { return m_intensity; };
 
+    // Equality
+    bool operator==(const PointLight& rhs) const {
+        return (m_position == rhs.m_position && m_intensity == rhs.m_intensity);
+    }
+
 private:
     Eigen::Vector4f m_position;
     Color m_intensity;
