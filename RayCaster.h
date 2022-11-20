@@ -64,6 +64,14 @@ std::vector<Intersection> intersect(Sphere* sphere, Ray& ray) {
     return intersections;
 }
 
+//Vector4f normal_at(Sphere* sphere, Vector4f& world_point) {
+//    Vector4f object_point = sphere->inverse() * world_point;
+//    Vector4f object_normal = object_point - create_point(0.0f, 0.0f, 0.0f);
+//    Vector4f world_normal = sphere->inverse().transpose() * object_normal;
+//    world_normal(3) = 0.0f;
+//    return world_normal.normalized();
+//}
+
 Intersection hit(std::vector<Intersection> intersections) {
     Intersection closest = Intersection();
     for (Intersection intersection : intersections) {
