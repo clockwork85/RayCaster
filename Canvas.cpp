@@ -82,3 +82,11 @@ std::string Canvas::canvas_to_ppm() {
     }
     return header;
 }
+
+// Write the canvas to a ppm file
+void Canvas::save_to_file(std::string filename) {
+    std::ofstream ppm_file;
+    ppm_file.open(filename);
+    ppm_file << canvas_to_ppm();
+    ppm_file.close();
+}

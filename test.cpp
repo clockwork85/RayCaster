@@ -7,172 +7,167 @@
 #include <Eigen/Geometry>
 #include "MathUtils.h"
 #include "Canvas.h"
+#include "Color.h"
 #include "RayCaster.h"
+#include "Sphere.h"
+#include "Transform.h"
 
-// using Tuple = Eigen::Vector4f;
+using Vector3f = Eigen::Vector3f;
+using Vector4f = Eigen::Vector4f;
+using Matrix4f = Eigen::Matrix4f;
 
-TEST(TestTupleVectorPoint, TestSample) {
-    EXPECT_EQ(1, 1);
-}
-
-TEST(TestTupleVectorPoint, TestTupleAsAPoint) {
-    Tuple t = Tuple(4.3f, -4.2f, 3.1f, 1.0f);
+TEST(TestVector4fVectorVector3f, TestVector4fAsAVector3f) {
+    Vector4f t = create_point(4.3f, -4.2f, 3.1f);
     EXPECT_EQ(t.x(), 4.3f);
     EXPECT_EQ(t.y(), -4.2f);
     EXPECT_EQ(t.z(), 3.1f);
     EXPECT_EQ(t.w(), 1.0f);
-    EXPECT_TRUE(t.isPoint());
-    EXPECT_FALSE(t.isVector());
+    EXPECT_TRUE(is_point(t));
+    EXPECT_FALSE(is_vector(t));
 }
 
-TEST(TestTupleVectorPoint, TestTupleAsAVector) {
-    Tuple t = Tuple(4.3f, -4.2f, 3.1f, 0.0f);
+TEST(TestVector4fVectorVector3f, TestVector4fAsAVector) {
+    Vector4f t = create_vector(4.3f, -4.2f, 3.1f);
     EXPECT_EQ(t.x(), 4.3f);
     EXPECT_EQ(t.y(), -4.2f);
     EXPECT_EQ(t.z(), 3.1f);
     EXPECT_EQ(t.w(), 0.0f);
-    EXPECT_FALSE(t.isPoint());
-    EXPECT_TRUE(t.isVector());
+    EXPECT_FALSE(is_point(t));
+    EXPECT_TRUE(is_vector(t));
 }
 
-TEST(TestTupleVectorPoint, TestCreateTupleFromPoint) {
-    Point p = Point(4.0f, -4.0f, 3.0f);
-    Tuple t = Tuple(p);
+TEST(TestVector4fVectorVector3f, TestCreateVector4fFromVector3f) {
+    Vector3f p = Vector3f(4.0f, -4.0f, 3.0f);
+    Vector4f t = create_point(p);
     EXPECT_EQ(t.x(), 4.0f);
     EXPECT_EQ(t.y(), -4.0f);
     EXPECT_EQ(t.z(), 3.0f);
     EXPECT_EQ(t.w(), 1.0f);
-    EXPECT_TRUE(t.isPoint());
-    EXPECT_FALSE(t.isVector());
+    EXPECT_TRUE(is_point(t));
+    EXPECT_FALSE(is_vector(t));
 }
 
-TEST(TestTupleVectorPoint, TestCreateTupleFromVector) {
-    Vector v = Vector(4.0f, -4.0f, 3.0f);
-    Tuple t = Tuple(v);
+TEST(TestVector4fVectorVector3f, TestCreateVector4fFromVector) {
+    Vector3f v = Vector3f(4.0f, -4.0f, 3.0f);
+    Vector4f t = create_vector(v);
     EXPECT_EQ(t.x(), 4.0f);
     EXPECT_EQ(t.y(), -4.0f);
     EXPECT_EQ(t.z(), 3.0f);
     EXPECT_EQ(t.w(), 0.0f);
-    EXPECT_FALSE(t.isPoint());
-    EXPECT_TRUE(t.isVector());
+    EXPECT_FALSE(is_point(t));
+    EXPECT_TRUE(is_vector(t));
 }
 
-TEST(TestTupleVectorPoint, TestTupleAreEqual) {
-    Tuple t1 = Tuple(4.0f, -4.0f, 3.0f, 1.0f);
-    Tuple t2 = Tuple(4.0f, -4.0f, 3.0f, 1.0f);
+TEST(TestVector4fVectorVector3f, TestVector4fAreEqual) {
+    Vector4f t1 = Vector4f(4.0f, -4.0f, 3.0f, 1.0f);
+    Vector4f t2 = Vector4f(4.0f, -4.0f, 3.0f, 1.0f);
     EXPECT_TRUE(t1 == t2);
 }
 
-TEST(TestTupleVectorPoint, TestTupleAreNotEqual) {
-    Tuple t1 = Tuple(4.0f, -4.0f, 3.0f, 1.0f);
-    Tuple t2 = Tuple(4.0f, -4.0f, 3.0f, 0.0f);
+TEST(TestVector4fVectorVector3f, TestVector4fAreNotEqual) {
+    Vector4f t1 = Vector4f(4.0f, -4.0f, 3.0f, 1.0f);
+    Vector4f t2 = Vector4f(4.0f, -4.0f, 3.0f, 0.0f);
     EXPECT_FALSE(t1 == t2);
 }
 
-TEST(TestTupleVectorPoint, TestTupleVectorAndPointAddition) {
-    Point p = Point(3.0f, -2.0f, 5.0f);
-    Tuple t1 = Tuple(p);
-    Vector v = Vector(-2.0f, 3.0f, 1.0f);
-    Tuple t2 = Tuple(v);
-    Tuple expected = Tuple(1.0f, 1.0f, 6.0f, 1.0f);
-    Tuple result = t1 + t2;
+TEST(TestVector4fVectorVector3f, TestVector4fVectorAndVector3fAddition) {
+    Vector4f p = create_point(3.0f, -2.0f, 5.0f);
+    Vector4f v = create_vector(-2.0f, 3.0f, 1.0f);
+    Vector4f expected = Vector4f(1.0f, 1.0f, 6.0f, 1.0f);
+    Vector4f result = p + v;
     EXPECT_TRUE(result == expected);
 }
 
-TEST(TestTupleVectorPoint, TestTuplePointAndPointSubtraction) {
-    Point p1 = Point(3.0f, 2.0f, 1.0f);
-    Tuple t1 = Tuple(p1);
-    Point p2 = Point(5.0f, 6.0f, 7.0f);
-    Tuple t2 = Tuple(p2);
-    Tuple expected = Tuple(-2.0f, -4.0f, -6.0f, 0.0f);
-    Tuple result = t1 - t2;
+TEST(TestVector4fVectorVector3f, TestVector4fVector3fAndVector3fSubtraction) {
+    Vector3f p1 = Vector3f(3.0f, 2.0f, 1.0f);
+    Vector4f t1 = create_point(p1);
+    Vector3f p2 = Vector3f(5.0f, 6.0f, 7.0f);
+    Vector4f t2 = create_point(p2);
+    Vector4f expected = Vector4f(-2.0f, -4.0f, -6.0f, 0.0f);
+    Vector4f result = t1 - t2;
     EXPECT_TRUE(result == expected);
 }
 
-TEST(TestTupleVectorPoint, TestTupleVectorAndPointSubtraction) {
-    Point p = Point(3.0f, 2.0f, 1.0f);
-    Tuple t1 = Tuple(p);
-    Vector v = Vector(5.0f, 6.0f, 7.0f);
-    Tuple t2 = Tuple(v);
-    Tuple expected = Tuple(-2.0f, -4.0f, -6.0f, 1.0f);
-    Tuple result = t1 - t2;
+TEST(TestVector4fVectorVector3f, TestVector4fVectorAndVector3fSubtraction) {
+    Vector4f p = create_point(3.0f, 2.0f, 1.0f);
+    Vector4f v = create_vector(5.0f, 6.0f, 7.0f);
+    Vector4f expected = Vector4f(-2.0f, -4.0f, -6.0f, 1.0f);
+    Vector4f result = p - v;
     EXPECT_TRUE(result == expected);
 }
 
-TEST(TestTupleVectorPoint, TestTupleVectorAndVectorSubtraction) {
-    Vector v1 = Vector(3.0f, 2.0f, 1.0f);
-    Tuple t1 = Tuple(v1);
-    Vector v2 = Vector(5.0f, 6.0f, 7.0f);
-    Tuple t2 = Tuple(v2);
-    Tuple expected = Tuple(-2.0f, -4.0f, -6.0f, 0.0f);
-    Tuple result = t1 - t2;
+TEST(TestVector4fVectorVector3f, TestVector4fVectorAndVectorSubtraction) {
+    Vector4f v1 = create_vector(3.0f, 2.0f, 1.0f);
+    Vector4f v2 = create_vector(5.0f, 6.0f, 7.0f);
+    Vector4f expected = Vector4f(-2.0f, -4.0f, -6.0f, 0.0f);
+    Vector4f result = v1 - v2;
     EXPECT_TRUE(result == expected);
 }
 
-TEST(TestTupleVectorPoint, TestTupleNegation) {
-    Tuple t = Tuple(1.0f, -2.0f, 3.0f, -4.0f);
-    Tuple expected = Tuple(-1.0f, 2.0f, -3.0f, 4.0f);
-    Tuple result = -t;
+TEST(TestVector4fVectorVector3f, TestVector4fNegation) {
+    Vector4f t = Vector4f(1.0f, -2.0f, 3.0f, -4.0f);
+    Vector4f expected = Vector4f(-1.0f, 2.0f, -3.0f, 4.0f);
+    Vector4f result = -t;
     EXPECT_TRUE(result == expected);
 }
 
-TEST(TestTupleVectorPoint, TestTupleScalarMultiplication) {
-    Tuple t = Tuple(1.0f, -2.0f, 3.0f, -4.0f);
-    Tuple expected = Tuple(3.5f, -7.0f, 10.5f, -14.0f);
-    Tuple result = t * 3.5;
+TEST(TestVector4fVectorVector3f, TestVector4fScalarMultiplication) {
+    Vector4f t = Vector4f(1.0f, -2.0f, 3.0f, -4.0f);
+    Vector4f expected = Vector4f(3.5f, -7.0f, 10.5f, -14.0f);
+    Vector4f result = t * 3.5;
     EXPECT_TRUE(result == expected);
 }
 
-TEST(TestTupleVectorPoint, TestTupleScalarDivision) {
-    Tuple t = Tuple(1.0f, -2.0f, 3.0f, -4.0f);
-    Tuple expected = Tuple(0.5f, -1.0f, 1.5f, -2.0f);
-    Tuple result = t / 2.0f;
+TEST(TestVector4fVectorVector3f, TestVector4fScalarDivision) {
+    Vector4f t = Vector4f(1.0f, -2.0f, 3.0f, -4.0f);
+    Vector4f expected = Vector4f(0.5f, -1.0f, 1.5f, -2.0f);
+    Vector4f result = t / 2.0f;
     EXPECT_TRUE(result == expected);
 }
 
-TEST(TestTupleVectorPoint, TestVectorMagnitude) {
-    Vector v1 = Vector(1.0f, 0.0f, 0.0f);
+TEST(TestVector4fVectorVector3f, TestVectorMagnitude) {
+    Vector4f v1 = create_vector(1.0f, 0.0f, 0.0f);
     EXPECT_EQ(v1.norm(), 1.0f);
-    Vector v2 = Vector(0.0f, 1.0f, 0.0f);
+    Vector4f v2 = create_vector(0.0f, 1.0f, 0.0f);
     EXPECT_EQ(v2.norm(), 1.0f);
-    Vector v3 = Vector(0.0f, 0.0f, 1.0f);
+    Vector4f v3 = create_vector(0.0f, 0.0f, 1.0f);
     EXPECT_EQ(v3.norm(), 1.0f);
-    Vector v4 = Vector(1.0f, 2.0f, 3.0f);
+    Vector4f v4 = create_vector(1.0f, 2.0f, 3.0f);
     EXPECT_EQ(v4.norm(), sqrt(14.0f));
-    Vector v5 = Vector(-1.0f, -2.0f, -3.0f);
+    Vector4f v5 = create_vector(-1.0f, -2.0f, -3.0f);
     EXPECT_EQ(v5.norm(), sqrt(14.0f));
 }
 
-TEST(TestTupleVectorPoint, TestVectorNormalize) {
-    Vector v1 = Vector(4.0f, 0.0f, 0.0f);
-    Vector expected1 = Vector(1.0f, 0.0f, 0.0f);
-    Vector result = v1.normalized();
+TEST(TestVector4fVectorVector3f, TestVectorNormalize) {
+    Vector4f v1 = create_vector(4.0f, 0.0f, 0.0f);
+    Vector4f expected1 = create_vector(1.0f, 0.0f, 0.0f);
+    Vector4f result = v1.normalized();
     EXPECT_TRUE(result == expected1);
-    Vector v2 = Vector(1.0f, 2.0f, 3.0f);
-    Vector expected2 = Vector(1.0f / sqrt(14.0f), 2.0f / sqrt(14.0f), 3.0f / sqrt(14.0f));
-    Vector result2 = v2.normalized();
+    Vector4f v2 = create_vector(1.0f, 2.0f, 3.0f);
+    Vector4f expected2 = create_vector(1.0f / sqrt(14.0f), 2.0f / sqrt(14.0f), 3.0f / sqrt(14.0f));
+    Vector4f result2 = v2.normalized();
     EXPECT_TRUE(result2 == expected2);
 }
 
-TEST(TestTupleVectorPoint, TestVectorMagnitudeAfterNormalize) {
-    Vector v = Vector(1.0f, 2.0f, 3.0f);
-    Vector normalized = v.normalized();
+TEST(TestVector4fVectorVector3f, TestVectorMagnitudeAfterNormalize) {
+    Vector4f v = create_vector(1.0f, 2.0f, 3.0f);
+    Vector4f normalized = v.normalized();
     EXPECT_FLOAT_EQ(normalized.norm(), 1.0f);
 }
 
-TEST(TestTupleVectorPoint, TestDotProduct) {
-    Vector v1 = Vector(1.0f, 2.0f, 3.0f);
-    Vector v2 = Vector(2.0f, 3.0f, 4.0f);
+TEST(TestVector4fVectorVector3f, TestDotProduct) {
+    Vector4f v1 = create_vector(1.0f, 2.0f, 3.0f);
+    Vector4f v2 = create_vector(2.0f, 3.0f, 4.0f);
     EXPECT_FLOAT_EQ(v1.dot(v2), 20.0f);
 }
 
-TEST(TestTupleVectorPoint, TestCrossProduct) {
-    Vector v1 = Vector(1.0f, 2.0f, 3.0f);
-    Vector v2 = Vector(2.0f, 3.0f, 4.0f);
-    Vector expected1 = Vector(-1.0f, 2.0f, -1.0f);
-    Vector expected2 = Vector(1.0f, -2.0f, 1.0f);
-    EXPECT_TRUE(v1.cross(v2) == expected1);
-    EXPECT_TRUE(v2.cross(v1) == expected2);
+TEST(TestVector4fVectorVector3f, TestCrossProduct) {
+    Vector4f v1 = create_vector(1.0f, 2.0f, 3.0f);
+    Vector4f v2 = create_vector(2.0f, 3.0f, 4.0f);
+    Vector4f expected1 = create_vector(-1.0f, 2.0f, -1.0f);
+    Vector4f expected2 = create_vector(1.0f, -2.0f, 1.0f);
+    EXPECT_TRUE(v1.cross3(v2) == expected1);
+    EXPECT_TRUE(v2.cross3(v1) == expected2);
 }
 
 TEST(TestCanvasColor, TestColorInstance) {
@@ -353,20 +348,20 @@ TEST(TestMatrices, TestEigenMatrixMultiplication) {
     EXPECT_TRUE(m1 * m2 == expected);
 }
 
-TEST(TestMatrices, TestMatrixMultipliedByTuple) {
+TEST(TestMatrices, TestMatrixMultipliedByVector4f) {
     Eigen::Matrix4f m;
     m << 1, 2, 3, 4,
             2, 4, 4, 2,
             8, 6, 4, 1,
             0, 0, 0, 1;
-    Tuple t(1, 2, 3, 1);
-    Tuple expected(18, 24, 33, 1);
+    Vector4f t(1, 2, 3, 1);
+    Vector4f expected(18, 24, 33, 1);
     EXPECT_TRUE(m * t == expected);
 }
 
-TEST(TestMatrices, TestIdentityMatrixMultipliedByTuple) {
+TEST(TestMatrices, TestIdentityMatrixMultipliedByVector4f) {
     Eigen::Matrix4f m = Eigen::Matrix4f::Identity();
-    Tuple t(1, 2, 3, 4);
+    Vector4f t(1, 2, 3, 4);
     EXPECT_TRUE(m * t == t);
 }
 
@@ -486,160 +481,173 @@ TEST(TestMatrices, TestMultiplyingProductByInverse) {
 }
 
 TEST(TestTransformations, TestTranslateMatrix) {
-    Point p = Point(-3, 4, 5);
-    Eigen::Vector3f translation(5, -3, 2);
-    Tuple t = Tuple(p).translate(translation);
-    Tuple expected = Tuple(Point(2, 1, 7));
-    EXPECT_TRUE(t == expected);
+    Matrix4f translate = Transform::translate(5, -3, 2);
+    Vector4f p = create_point(-3, 4, 5);
+    EXPECT_TRUE(translate * p == create_point(2, 1, 7));
 }
 
 TEST(TestTransformations, TestTranslateInverseMatrix) {
-    Point p = Point(-3, 4, 5);
-    Tuple t = Tuple(p);
-    Eigen::Vector3f translation(5, -3, 2);
-    t = t.translate_inv(translation);
-    EXPECT_TRUE(t == Tuple(Point(-8, 7, 3)));
+    Vector4f p = create_point(-3, 4, 5);
+    Matrix4f translate =  Transform::translate(5, -3, 2);
+    EXPECT_TRUE(translate.inverse() * p == create_point(-8, 7, 3));
 }
 
 TEST(TestTransformations, TestTranslateVector) {
-    Vector v = Vector(-3, 4, 5);
-    Tuple vector = Tuple(v);
-    Eigen::Vector3f translation(5, -3, 2);
-    Tuple t = vector.translate(translation);
-    EXPECT_TRUE(t == Tuple(v));
+    Vector4f v = create_vector(-3, 4, 5);
+    Matrix4f translate = Transform::translate(5, -3, 2);
+    EXPECT_TRUE(translate * v == v);
 }
 
-TEST(TestTransformations, TestScalingAPoint) {
-    Point p = Point(-4, 6, 8);
-    Tuple point = Tuple(p);
-    Eigen::Vector3f scale(2, 3, 4);
-    EXPECT_TRUE(point.scale(scale) == Tuple(Point(-8, 18, 32)));
+TEST(TestTransformations, TestScalingAVector3f) {
+    Vector4f p = create_point(-4, 6, 8);
+    Matrix4f scale = Transform::scale(2, 3, 4);
+    EXPECT_TRUE(scale * p == create_point(-8, 18, 32));
 }
 
 TEST(TestTransformations, TestScalingAVector) {
-    Vector v = Vector(-4, 6, 8);
-    Tuple vector = Tuple(v);
-    Eigen::Vector3f scale(2, 3, 4);
-    EXPECT_TRUE(vector.scale(scale) == Tuple(Vector(-8, 18, 32)));
+    Vector4f v = create_vector(-4, 6, 8);
+    Matrix4f scale = Transform::scale(2, 3, 4);
+    EXPECT_TRUE(scale * v == create_vector(-8, 18, 32));
 }
 
 TEST(TestTransformations, TestScalingInverse) {
-    Vector v = Vector(-4, 6, 8);
-    Tuple vector = Tuple(v);
-    Eigen::Vector3f scale(2, 3, 4);
-    EXPECT_TRUE(vector.scale_inv(scale) == Tuple(Vector(-2, 2, 2)));
+    Vector4f vector = create_vector(-4, 6, 8);
+    Matrix4f scale = Transform::scale(2, 3, 4);
+    EXPECT_TRUE(scale.inverse() * vector == create_vector(-2, 2, 2));
 }
 
 TEST(TestTransformations, TestReflection) {
-    Point p = Point(2, 3, 4);
-    Tuple point = Tuple(p);
-    Eigen::Vector3f scale(-1, 1, 1);
-    EXPECT_TRUE(point.scale(scale) == Tuple(Point(-2, 3, 4)));
+    Vector4f p = create_point(2, 3, 4);
+    Matrix4f scale = Transform::scale(-1, 1, 1);
+    EXPECT_TRUE(scale * p == create_point(-2, 3, 4));
 }
 
 TEST(TestTransformations, TestRotationAroundXAxis)  {
-    Point p = Point(0, 1, 0);
-    Tuple point = Tuple(p);
-    EXPECT_TRUE(point.rotate_x(M_PI / 4) == Tuple(Point(0, sqrt(2) / 2, sqrt(2) / 2)));
-    EXPECT_TRUE(point.rotate_x(M_PI / 2) == Tuple(Point(0, 0, 1)));
+    Vector4f p = create_point(0, 1, 0);
+    EXPECT_TRUE(Transform::rotate_x(M_PI_4) * p == create_point(0, sqrt(2) / 2, sqrt(2) / 2));
+    EXPECT_TRUE((Transform::rotate_x(M_PI_2) * p).isApprox(create_point(0, 0, 1)));
 }
 
 TEST(TestTransformations, TestInverseRotationAboutXAxis) {
-    Point p = Point(0, 1, 0);
-    Tuple point = Tuple(p);
-    EXPECT_TRUE(point.rotate_x_inv(M_PI / 4).isApprox(Tuple(Point(0, sqrt(2) / 2, -sqrt(2) / 2)), 0.0001));
+    Vector4f p = create_point(0, 1, 0);
+    EXPECT_TRUE((Transform::rotate_x(M_PI_4).inverse() * p).isApprox(create_point(0, sqrt(2) / 2, -sqrt(2) / 2)));
 }
 
 TEST(TestTransformations, TestRotationAroundYAxis)  {
-    Point p = Point(0, 0, 1);
-    Tuple point = Tuple(p);
-    EXPECT_TRUE(point.rotate_y(M_PI_4).isApprox(Tuple(Point(sqrt(2) / 2, 0, sqrt(2) / 2)), 0.0001));
-    EXPECT_TRUE(point.rotate_y(M_PI_2).isApprox(Tuple(Point(1, 0, 0)), 0.0001));
+    Vector4f p = create_point(0, 0, 1);
+    EXPECT_TRUE((Transform::rotate_y(M_PI_4) * p).isApprox(create_point(sqrt(2) / 2, 0, sqrt(2) / 2)));
+    EXPECT_TRUE((Transform::rotate_y(M_PI_2) * p).isApprox(create_point(1, 0, 0)));
 }
 
 TEST(TestTransformations, TestRotationAroundZAxis) {
-    Point p = Point(0, 1, 0);
-    Tuple point = Tuple(p);
-    EXPECT_TRUE(point.rotate_z(M_PI_4).isApprox(Tuple(Point(-sqrt(2) / 2, sqrt(2) / 2, 0)), 0.0001));
-    EXPECT_TRUE(point.rotate_z(M_PI_2).isApprox(Tuple(Point(-1, 0, 0)), 0.0001));
+    Vector4f p = create_point(0, 1, 0);
+    EXPECT_TRUE((Transform::rotate_z(M_PI_4) * p).isApprox(create_point(-sqrt(2) / 2, sqrt(2) / 2, 0)));
+    EXPECT_TRUE((Transform::rotate_z(M_PI_2) * p).isApprox(create_point(-1, 0, 0)));
 }
 
 TEST(TestTransformations, TestShearingTransformation) {
-    Point p = Point(2, 3, 4);
-    Tuple point = Tuple(p);
-    Eigen::Transform<float, 3, Eigen::Affine> t = shear3d(1, 0, 0, 0, 0, 0);
-    EXPECT_TRUE(t * point == Tuple(Point(5, 3, 4)));
+    Vector4f p = create_point(2, 3, 4);
+    EXPECT_TRUE(Transform::shear(1, 0, 0, 0, 0, 0) * p == create_point(5, 3, 4));
 }
 
 TEST(TestTransformations, TestShearingTransformationXZ) {
-    Point p = Point(2, 3, 4);
-    Tuple point = Tuple(p);
-    Eigen::Transform<float, 3, Eigen::Affine> t = shear3d(0, 1, 0, 0, 0, 0);
-    EXPECT_TRUE(t * point == Tuple(Point(6, 3, 4)));
+    Vector4f p = create_point(2, 3, 4);
+    EXPECT_TRUE(Transform::shear(0, 1, 0, 0, 0, 0) * p == create_point(6, 3, 4));
 }
 
 TEST(TestTransformations, TestShearingTransformationYX) {
-    Point p = Point(2, 3, 4);
-    Tuple point = Tuple(p);
-    Eigen::Transform<float, 3, Eigen::Affine> t = shear3d(0, 0, 1, 0, 0, 0);
-    EXPECT_TRUE(t * point == Tuple(Point(2, 5, 4)));
+    Vector4f p = create_point(2, 3, 4);
+    EXPECT_TRUE(Transform::shear(0, 0, 1, 0, 0, 0) * p == create_point(2, 5, 4));
 }
 
 TEST(TestTransformations, TestShearingTransformationYZ) {
-    Point p = Point(2, 3, 4);
-    Tuple point = Tuple(p);
-    Eigen::Transform<float, 3, Eigen::Affine> t = shear3d(0, 0, 0, 1, 0, 0);
-    EXPECT_TRUE(t * point == Tuple(Point(2, 7, 4)));
+    Vector4f p = create_point(2, 3, 4);
+    EXPECT_TRUE(Transform::shear(0, 0, 0, 1, 0, 0) * p == create_point(2, 7, 4));
 }
 
 TEST(TestTransformations, TestShearingTransformationsZY) {
-    Point p = Point(2, 3, 4);
-    Tuple point = Tuple(p);
-    Eigen::Transform<float, 3, Eigen::Affine> t = shear3d(0, 0, 0, 0, 1, 0);
-    EXPECT_TRUE(t * point == Tuple(Point(2, 3, 6)));
+    Vector4f p = create_point(2, 3, 4);
+    EXPECT_TRUE(Transform::shear(0, 0, 0, 0, 1, 0) * p == create_point(2, 3, 6));
 }
 
 TEST(TestTransformations, TestTransformationsInSequence) {
-    Point p = Point(1, 0, 1);
-    Tuple point = Tuple(p);
-    point = point.rotate_x(M_PI_2);
-    point = point.scale(Eigen::Vector3f(5, 5, 5));
-    point = point.translate(Eigen::Vector3f(10, 5, 7));
-    EXPECT_TRUE(point == Tuple(Point(15, 0, 7)));
+    Vector4f p = create_point(1, 0, 1);
+    p = Transform::rotate_x(M_PI_2) * p;
+    p = Transform::scale(5, 5, 5) * p;
+    p = Transform::translate(10, 5, 7) * p;
+    EXPECT_TRUE(p == create_point(15, 0, 7));
 }
 
 TEST(TestTransformations, TestTransformationsChained) {
-    Point p = Point(1, 0, 1);
-    Tuple point = Tuple(p);
-    point = point.rotate_x(M_PI_2).scale(Eigen::Vector3f(5, 5, 5)).translate(Eigen::Vector3f(10, 5, 7));
-    EXPECT_TRUE(point  == Tuple(Point(15, 0, 7)));
+    Vector4f p = create_point(1, 0, 1);
+    // Matrix4f t = Transform::rotate_x(M_PI_2) * Transform::scale(5, 5, 5) * Transform::translate(10, 5, 7);
+    Matrix4f t = Transformation::identity()
+        .rotate_x(M_PI_2)
+        .scale(5, 5, 5)
+        .translate(10, 5, 7)
+        .matrix();
+    EXPECT_TRUE(t * p == create_point(15, 0, 7));
 }
 
 TEST(TestRayCaster, TestQueryRay) {
-    Ray r = Ray(Point(0, 0, -5), Vector(0, 0, 1));
-    EXPECT_TRUE(r.origin == Tuple(Point(0, 0, -5)));
-    EXPECT_TRUE(r.direction == Tuple(Vector(0, 0, 1)));
+    Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
+    EXPECT_TRUE(r.origin == create_point(0, 0, -5));
+    EXPECT_TRUE(r.direction == create_vector(0, 0, 1));
 }
 
-TEST(TestRayCaster, TestPointFromADistance) {
-    Ray r = Ray(Point(2, 3, 4), Vector(1, 0, 0));
-    EXPECT_TRUE(r.position(0) == Tuple(Point(2, 3, 4)));
-    EXPECT_TRUE(r.position(1) == Tuple(Point(3, 3, 4)));
-    EXPECT_TRUE(r.position(-1) == Tuple(Point(1, 3, 4)));
-    EXPECT_TRUE(r.position(2.5) == Tuple(Point(4.5, 3, 4)));
+TEST(TestRayCaster, TestVector3fFromADistance) {
+    Ray r = Ray(create_point(2, 3, 4), create_vector(1, 0, 0));
+    EXPECT_TRUE(r.position(0) == create_point(2, 3, 4));
+    EXPECT_TRUE(r.position(1) == create_point(3, 3, 4));
+    EXPECT_TRUE(r.position(-1) == create_point(1, 3, 4));
+    EXPECT_TRUE(r.position(2.5) == create_point(4.5, 3, 4));
 }
 
-TEST(TestRayCaster, TestIntersectSphereWithTwoPoints) {
-    Ray r = Ray(Point(0, 0, -5), Vector(0, 0, 1));
+TEST(TestRayCaster, TestIntersectSphereWithTwoVector3fs) {
+    Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
     Sphere s = Sphere();
-    std::vector<Intersection> intersections = r.intersect(&s);
+    std::vector<Intersection> intersections = intersect(&s, r);
     EXPECT_EQ(intersections.size(), 2);
     EXPECT_EQ(intersections[0].t, 4.0);
     EXPECT_EQ(intersections[1].t, 6.0);
 }
 
+TEST(TestRayCaster, TestIntersectSphereWithATangent) {
+    Ray r = Ray(create_point(0, 1, -5), create_vector(0, 0, 1));
+    Sphere s = Sphere();
+    std::vector<Intersection> intersections = intersect(&s, r);
+    EXPECT_EQ(intersections.size(), 2);
+    EXPECT_EQ(intersections[0].t, 5.0);
+    EXPECT_EQ(intersections[1].t, 5.0);
+}
+
+TEST(TestRayCaster, TestRayMissesSphere) {
+    Ray r = Ray(create_point(0, 2, -5), create_vector(0, 0, 1));
+    Sphere s = Sphere();
+    std::vector<Intersection> intersections = intersect(&s, r);
+    EXPECT_EQ(intersections.size(), 0);
+}
+
+TEST(TestRayCaster, TestRayOriginatesInsideASphere) {
+    Ray r = Ray(create_point(0, 0, 0), create_vector(0, 0, 1));
+    Sphere s = Sphere();
+    std::vector<Intersection> intersections = intersect(&s, r);
+    EXPECT_EQ(intersections.size(), 2);
+    EXPECT_EQ(intersections[0].t, -1.0);
+    EXPECT_EQ(intersections[1].t, 1.0);
+}
+
+TEST(TestRayCaster, TestSphereIsBehindARay){
+    Ray r = Ray(create_point(0, 0, 5), create_vector(0, 0, 1));
+    Sphere s = Sphere();
+    std::vector<Intersection> intersections = intersect(&s, r);
+    EXPECT_EQ(intersections.size(), 2);
+    EXPECT_EQ(intersections[0].t, -6.0);
+    EXPECT_EQ(intersections[1].t, -4.0);
+}
+
 TEST(TestRayCaster, TestIntersectionEncapsulatesTAndObject) {
-    Ray r = Ray(Point(0, 0, -5), Vector(0, 0, 1));
+    Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
     Sphere s = Sphere();
     Intersection i = Intersection(3.5, &s);
     EXPECT_EQ(i.t, 3.5);
@@ -647,7 +655,7 @@ TEST(TestRayCaster, TestIntersectionEncapsulatesTAndObject) {
 }
 
 TEST(TestRayCaster, TestAggregateIntersections) {
-    Ray r = Ray(Point(0, 0, -5), Vector(0, 0, 1));
+    Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
     Sphere s = Sphere();
     Intersection i1 = Intersection(1, &s);
     Intersection i2 = Intersection(2, &s);
@@ -657,8 +665,17 @@ TEST(TestRayCaster, TestAggregateIntersections) {
     EXPECT_EQ(intersections[1].t, 2);
 }
 
+TEST(TestRayCaster, TestIntersectSetsTheObjectOnIntersection) {
+    Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
+    Sphere s = Sphere();
+    std::vector<Intersection> intersections = intersect(&s, r);
+    EXPECT_EQ(intersections.size(), 2);
+    EXPECT_EQ(intersections[0].object, &s);
+    EXPECT_EQ(intersections[1].object, &s);
+}
+
 TEST(TestRayCaster, TestHitWhenAllIntersectionsHavePositiveT) {
-    Ray r = Ray(Point(0, 0, -5), Vector(0, 0, 1));
+    Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
     Sphere s = Sphere();
     std::vector<Intersection> intersections = {Intersection(1, &s), Intersection(2, &s)};
     Intersection i = hit(intersections);
@@ -666,7 +683,7 @@ TEST(TestRayCaster, TestHitWhenAllIntersectionsHavePositiveT) {
 }
 
 TEST(TestRayCaster, TestHitWhenSomeIntersectionsHaveNegativeT) {
-    Ray r = Ray(Point(0, 0, -5), Vector(0, 0, 1));
+    Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
     Sphere s = Sphere();
     std::vector<Intersection> intersections = {Intersection(-1, &s), Intersection(1, &s)};
     Intersection i = hit(intersections);
@@ -674,7 +691,7 @@ TEST(TestRayCaster, TestHitWhenSomeIntersectionsHaveNegativeT) {
 }
 
 TEST(TestRayCaster, TestHitWhenAllIntersectionsHaveNegativeT) {
-    Ray r = Ray(Point(0, 0, -5), Vector(0, 0, 1));
+    Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
     Sphere s = Sphere();
     std::vector<Intersection> intersections = {Intersection(-2, &s), Intersection(-1, &s)};
     Intersection i = hit(intersections);
@@ -682,7 +699,7 @@ TEST(TestRayCaster, TestHitWhenAllIntersectionsHaveNegativeT) {
 }
 
 TEST(TestRayCaster, TestHitIsAlwaysLowestNonNegativeIntersection) {
-    Ray r = Ray(Point(0, 0, -5), Vector(0, 0, 1));
+    Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
     Sphere s = Sphere();
     std::vector<Intersection> intersections = {Intersection(5, &s), Intersection(7, &s), Intersection(-3, &s), Intersection(2, &s)};
     Intersection i = hit(intersections);
@@ -690,47 +707,53 @@ TEST(TestRayCaster, TestHitIsAlwaysLowestNonNegativeIntersection) {
 }
 
 TEST(TestRayTransforms, TestTranslateRay) {
-    Ray r = Ray(Point(1, 2, 3), Vector(0, 1, 0));
-    Eigen::Vector3f translation = Eigen::Vector3f(3, 4, 5);
-    Ray r2 = r.translate(translation);
-    EXPECT_TRUE(r2.origin == Tuple(Point(4, 6, 8)));
-    EXPECT_TRUE(r2.direction == Tuple(Vector(0, 1, 0)));
+    Ray r = Ray(create_point(1, 2, 3), create_vector(0, 1, 0));
+    Matrix4f translation = Transform::translate(3, 4, 5);
+    Ray r2 = transform_ray(r, translation);
+    EXPECT_TRUE(r2.origin == create_point(4, 6, 8));
+    EXPECT_TRUE(r2.direction == create_vector(0, 1, 0));
 }
 
 TEST(TestRayTransforms, TestScaleRay) {
-    Ray r = Ray(Point(1, 2, 3), Vector(0, 1, 0));
-    Eigen::Vector3f scale = Eigen::Vector3f(2, 3, 4);
-    Ray r2 = r.scale(scale);
-    EXPECT_TRUE(r2.origin == Tuple(Point(2, 6, 12)));
-    EXPECT_TRUE(r2.direction == Tuple(Vector(0, 3, 0)));
+    Ray r = Ray(create_point(1, 2, 3), create_vector(0, 1, 0));
+    Matrix4f scale = Transform::scale(2, 3, 4);
+    Ray r2 = transform_ray(r, scale);
+    EXPECT_TRUE(r2.origin == create_point(2, 6, 12));
+    EXPECT_TRUE(r2.direction == create_vector(0, 3, 0));
 }
 
 TEST(TestSphereTransforms, TestDefaultTransformationIsIdentityMatrix)  {
     Sphere s = Sphere();
-    EXPECT_TRUE(s.transform == Eigen::Matrix4f::Identity());
+    EXPECT_TRUE(s.matrix() == Matrix4f::Identity());
 }
 
 TEST(TestSphereTransforms, TestAssigningATransformation) {
     Sphere s = Sphere();
-    Eigen::Transform<float, 3, Eigen::Affine> t = Eigen::Transform<float, 3, Eigen::Affine>::Identity();
-    t.translate(Eigen::Vector3f(2, 3, 4));
-    s.set_transform(t);
-    EXPECT_TRUE(s.transform == t.matrix());
-    EXPECT_TRUE(s.center == Tuple(Point(2, 3, 4)));
-    EXPECT_TRUE(s.radius == 1.0f);
+    Matrix4f translation = Transform::translate(2, 3, 4);
+    s.set_transform(translation);
+    EXPECT_TRUE(s.matrix() == translation.matrix());
+    EXPECT_TRUE(s.center == create_point(2, 3, 4));
 }
 
 TEST(TestSphereTransforms, TestIntersectingAScaledSphereWithRay) {
-    Ray r = Ray(Point(0, 0, -5), Vector(0, 0, 1));
+    Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
     Sphere s = Sphere();
-    Eigen::Transform<float, 3, Eigen::Affine> t = Eigen::Transform<float, 3, Eigen::Affine>::Identity();
-    t.scale(Eigen::Vector3f(2, 2, 2));
-    s.set_transform(t);
-    std::vector<Intersection> intersections = r.intersect(&s);
+    Matrix4f scale = Transform::scale(2, 2, 2);
+    s.set_transform(scale   );
+    std::vector<Intersection> intersections = intersect(&s, r);
     EXPECT_EQ(intersections.size(), 2);
     EXPECT_EQ(intersections[0].t, 3);
     EXPECT_EQ(intersections[1].t, 7);
-    EXPECT_TRUE(s.radius == 2.0f);
+}
+
+TEST(TestSphereTransforms, TestIntersectingATranslatedSphereWithRay) {
+    Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
+    Sphere s = Sphere();
+    Matrix4f translation = Transform::translate(5, 0, 0);
+    s.set_transform(translation);
+    std::vector<Intersection> intersections = intersect(&s, r);
+    EXPECT_EQ(intersections.size(), 0);
+    EXPECT_EQ(s.center, create_point(5, 0, 0));
 }
 
 int main(int argc, char **argv) {
