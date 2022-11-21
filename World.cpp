@@ -17,5 +17,6 @@ World default_world() {
     world.add_object(s2);
     world.add_light(PointLight(create_point(-10, 10, -10), Color(1, 1, 1)));
     return world;
-
 }
+
+

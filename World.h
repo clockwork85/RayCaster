@@ -11,6 +11,8 @@
 #include "Sphere.h"
 #include "Transform.h"
 #include <vector>
+#include <Eigen/Core>
+#include <Eigen/Geometry>
 
 class World {
 public:
@@ -25,5 +27,6 @@ public:
 };
 
 World default_world();
+
 
 #endif //RAYCASTER_WORLD_H

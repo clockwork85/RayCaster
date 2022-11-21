@@ -43,6 +43,7 @@ namespace Transform {
     Matrix4f scale(float x, float y, float z);
     Matrix4f scale(const Vector4f& v);
     Matrix4f shear(float x_y, float x_z, float y_x, float y_z, float z_x, float z_y);
+    Matrix4f view_transform(const Vector4f& from, const Vector4f& to, const Vector4f& up);
 }
 
 

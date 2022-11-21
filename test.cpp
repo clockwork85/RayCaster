@@ -981,7 +981,6 @@ TEST(TestWorld, TestIntersectionOccursOnTheInside) {
 
 TEST(TestWorld, TestShadingAnIntersection) {
     World w = default_world();
-    std::cout << "w.lights[0].position() = " << w.lights[0].position() << std::endl;
     Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
     Sphere shape = w.objects[0];
     Intersection i = Intersection(4, &shape);
@@ -1025,6 +1024,30 @@ TEST(TestWorld, TestColorWithAnIntersectionBehindTheRay) {
     EXPECT_TRUE(c == w.objects[1].material.color);
 }
 
+TEST(TestWorld, TestViewTransformTransformationMatrixForDefaultOrientation) {
+    Matrix4f t = Transform::view_transform(create_point(0, 0, 0), create_point(0, 0, -1), create_vector(0, 1, 0));
+    EXPECT_TRUE(t.matrix() == Matrix4f::Identity());
+}
+
+TEST(TestWorld, TestViewTransformationMatrixLookingInPositiveZDirection) {
+    Matrix4f t = Transform::view_transform(create_point(0, 0, 0), create_point(0, 0, 1), create_vector(0, 1, 0));
+    EXPECT_TRUE(t.matrix() == Transform::scale(-1, 1, -1).matrix());
+}
+
+TEST(TestWorld, TestTheViewTranslationMovesTheWorld) {
+    Matrix4f t = Transform::view_transform(create_point(0, 0, 8), create_point(0, 0, 0), create_vector(0, 1, 0));
+    EXPECT_TRUE(t.matrix() == Transform::translate(0, 0, -8).matrix());
+}
+
+TEST(TestWorld, TestAnArbitraryViewTransformation) {
+    Matrix4f t = Transform::view_transform(create_point(1, 3, 2), create_point(4, -2, 8), create_vector(1, 1, 0));
+    Matrix4f expected;
+    expected << -0.50709, 0.50709, 0.67612, -2.36643,
+            0.76772, 0.60609, 0.12122, -2.82843,
+            -0.35857, 0.59761, -0.71714, 0.00000,
+            0.00000, 0.00000, 0.00000, 1.00000;
+    EXPECT_TRUE(t.matrix().isApprox(expected));
+}
 
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);

@@ -93,4 +93,27 @@ namespace Transform {
         shear(2, 1) = z_y;
         return shear;
     }
+    Matrix4f view_transform(const Vector4f& from, const Vector4f& to, const Vector4f& up) {
+        Vector4f forward = (to - from).normalized();
+        Vector4f upn = up.normalized();
+        Vector4f left = forward.cross3(upn);
+        Vector4f true_up = left.cross3(forward);
+        Matrix4f orientation = Matrix4f::Identity();
+        orientation(0, 0) = left.x();
+        orientation(0, 1) = left.y();
+        orientation(0, 2) = left.z();
+        orientation(1, 0) = true_up.x();
+        orientation(1, 1) = true_up.y();
+        orientation(1, 2) = true_up.z();
+        orientation(2, 0) = -forward.x();
+        orientation(2, 1) = -forward.y();
+        orientation(2, 2) = -forward.z();
+        Matrix4f translation = Matrix4f::Identity();
+        translation(0, 3) = -from.x();
+        translation(1, 3) = -from.y();
+        translation(2, 3) = -from.z();
+        return orientation * translation;
+    }
 }
+
+
