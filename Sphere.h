@@ -26,7 +26,7 @@ public:
         return Vector4f(m_transform(0, 3), m_transform(1, 3), m_transform(2, 3), 1.0f);
     }
 
-    void transform(Matrix4f& transform) {
+    void transform(Matrix4f transform) {
         m_transform = transform.matrix() * m_transform;
         m_inverse = m_transform.inverse();
         center = get_center();

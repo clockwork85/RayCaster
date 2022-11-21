@@ -6,6 +6,7 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include "MathUtils.h"
+#include "Camera.h"
 #include "Canvas.h"
 #include "Color.h"
 #include "Lights.h"
@@ -1047,6 +1048,41 @@ TEST(TestWorld, TestAnArbitraryViewTransformation) {
             -0.35857, 0.59761, -0.71714, 0.00000,
             0.00000, 0.00000, 0.00000, 1.00000;
     EXPECT_TRUE(t.matrix().isApprox(expected));
+}
+
+TEST(TestWorld, TestConstructingACamera) {
+    Camera c = Camera(160, 120, M_PI / 2);
+    EXPECT_TRUE(c.hsize == 160);
+    EXPECT_TRUE(c.vsize == 120);
+    EXPECT_FLOAT_EQ(c.field_of_view, M_PI / 2);
+    EXPECT_TRUE(c.transform.matrix() == Matrix4f::Identity());
+}
+
+TEST(TestWorld, TestThePixelSizeForAHorizontalCanvas) {
+    Camera c = Camera(200, 125, M_PI / 2);
+    EXPECT_FLOAT_EQ(c.pixel_size, 0.01);
+}
+
+TEST(TestWorld, TestConstructARayThroughCenterOfCanvas) {
+    Camera c = Camera(201, 101, M_PI / 2);
+    Ray r = ray_for_pixel(c, 100, 50);
+    EXPECT_TRUE(r.origin == create_point(0, 0, 0));
+    EXPECT_TRUE(r.direction.isApprox(create_vector(0, 0, -1)));
+}
+
+TEST(TestWorld, TestConstructARayThroughTheCornerOfCanvas) {
+    Camera c = Camera(201, 101, M_PI / 2);
+    Ray r = ray_for_pixel(c, 0, 0);
+    EXPECT_TRUE(r.origin == create_point(0, 0, 0));
+    EXPECT_TRUE(r.direction.isApprox(create_vector(0.66519, 0.33259, -0.66851)));
+}
+
+TEST(TestWorld, TestConstructARayWhenTheCameraIsTransformed) {
+    Camera c = Camera(201, 101, M_PI / 2);
+    c.transform = Transform::rotate_y(M_PI / 4) * Transform::translate(0, -2, 5);
+    Ray r = ray_for_pixel(c, 100, 50);
+    EXPECT_TRUE(r.origin.isApprox(create_point(0, 2, -5)));
+    EXPECT_TRUE(r.direction.isApprox(create_vector(sqrt(2) / 2, 0, -sqrt(2) / 2)));
 }
 
 int main(int argc, char **argv) {

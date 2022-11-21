@@ -5,6 +5,8 @@
 #ifndef RAYCASTER_RAYCASTER_H
 #define RAYCASTER_RAYCASTER_H
 
+#include "Camera.h"
+#include "Canvas.h"
 #include "Lights.h"
 #include "MathUtils.h"
 #include "Sphere.h"
@@ -194,5 +196,27 @@ Color color_at(World& world, Ray& ray) {
     return shade_hit(world, comps);
 }
 
+Ray ray_for_pixel(Camera camera, int px, int py) {
+    float xoffset = (px + 0.5f) * camera.pixel_size;
+    float yoffset = (py + 0.5f) * camera.pixel_size;
+    float world_x = camera.half_width - xoffset;
+    float world_y = camera.half_height - yoffset;
+    Vector4f pixel = camera.transform.inverse() * create_point(world_x, world_y, -1.0f);
+    Vector4f origin = camera.transform.inverse() * create_point(0.0f, 0.0f, 0.0f);
+    Vector4f direction = (pixel - origin).normalized();
+    return Ray(origin, direction);
+}
+
+Canvas render(Camera camera, World world) {
+    Canvas image = Canvas(camera.hsize, camera.vsize);
+    for (int y = 0; y < camera.vsize; y++) {
+        for (int x = 0; x < camera.hsize; x++) {
+            Ray ray = ray_for_pixel(camera, x, y);
+            Color color = color_at(world, ray);
+            image.write_pixel(x, y, color);
+        }
+    }
+    return image;
+}
 
 #endif //RAYCASTER_RAYCASTER_H
