@@ -11,7 +11,9 @@
 using Vector3f = Eigen::Vector3f;
 using Vector4f = Eigen::Vector4f;
 
-bool is_equal(float a, float b, float epsilon = 0.00001f);
+constexpr float EPSILON = 0.00001f;
+
+bool is_equal(float a, float b, float epsilon = EPSILON);
 
 //class Point : public Eigen::Vector3f {
 //public:

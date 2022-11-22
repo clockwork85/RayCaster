@@ -869,7 +869,7 @@ TEST(TestLighting, TestLightingWithEyeBetweenLightAndSurface) {
     PointLight light = PointLight(create_point(0, 0, -10), Color(1, 1, 1));
     Vector4f eyev = create_vector(0, 0, -1);
     Vector4f normalv = create_vector(0, 0, -1);
-    Color result = lighting(m,  light, position, eyev, normalv);
+    Color result = lighting(m,  light, position, eyev, normalv, false);
     EXPECT_TRUE(result == Color(1.9, 1.9, 1.9));
 }
 
@@ -879,7 +879,7 @@ TEST(TestLighting, TestLightingWithTheEyeBetweenLightAndSurfaceOffset45) {
     PointLight light = PointLight(create_point(0, 0, -10), Color(1, 1, 1));
     Vector4f eyev = create_vector(0, sqrt(2)/2, -sqrt(2)/2);
     Vector4f normalv = create_vector(0, 0, -1);
-    Color result = lighting(m,  light, position, eyev, normalv);
+    Color result = lighting(m,  light, position, eyev, normalv, false);
     EXPECT_TRUE(result == Color(1.0, 1.0, 1.0));
 }
 
@@ -889,7 +889,7 @@ TEST(TestLighting, TestLightingWithEyeOppositeSurfaceLightOffset45) {
     PointLight light = PointLight(create_point(0, 10, -10), Color(1, 1, 1));
     Vector4f eyev = create_vector(0, 0, -1);
     Vector4f normalv = create_vector(0, 0, -1);
-    Color result = lighting(m,  light, position, eyev, normalv);
+    Color result = lighting(m,  light, position, eyev, normalv, false);
     EXPECT_TRUE(result == Color(0.7364, 0.7364, 0.7364));
 }
 
@@ -899,7 +899,7 @@ TEST(TestLighting, TestLightingWithEyeInThePathOftheReflectionVector) {
     PointLight light = PointLight(create_point(0, 10, -10), Color(1, 1, 1));
     Vector4f eyev = create_vector(0, -sqrt(2)/2, -sqrt(2)/2);
     Vector4f normalv = create_vector(0, 0, -1);
-    Color result = lighting(m,  light, position, eyev, normalv);
+    Color result = lighting(m,  light, position, eyev, normalv, false);
     EXPECT_TRUE(result.isApprox(Color(1.6364, 1.6364, 1.6364)));
 }
 
@@ -909,7 +909,7 @@ TEST(TestLighting, TestLightingWithTheLightBehindTheSurface) {
     PointLight light = PointLight(create_point(0, 0, 10), Color(1, 1, 1));
     Vector4f eyev = create_vector(0, 0, -1);
     Vector4f normalv = create_vector(0, 0, -1);
-    Color result = lighting(m,  light, position, eyev, normalv);
+    Color result = lighting(m,  light, position, eyev, normalv, false);
     EXPECT_TRUE(result == Color(0.1, 0.1, 0.1));
 }
 
@@ -993,7 +993,7 @@ TEST(TestWorld, TestShadingAnIntersection) {
 TEST(TestWorld, TestShadingIntersectionFromInside) {
     World w = default_world();
     w.lights.clear();
-    w.lights.emplace_back(PointLight(create_point(0, 0.25, 0), Color(1, 1, 1)));
+    w.lights.push_back(PointLight(create_point(0, 0.25, 0), Color(1, 1, 1)));
     Ray r = Ray(create_point(0, 0, 0), create_vector(0, 0, 1));
     Sphere shape = w.objects[1];
     Intersection i = Intersection(0.5, &shape);
@@ -1084,6 +1084,70 @@ TEST(TestWorld, TestConstructARayWhenTheCameraIsTransformed) {
     EXPECT_TRUE(r.origin.isApprox(create_point(0, 2, -5)));
     EXPECT_TRUE(r.direction.isApprox(create_vector(sqrt(2) / 2, 0, -sqrt(2) / 2)));
 }
+
+TEST(TestShadows, TestLightingSurfaceInShadow) {
+    World w = default_world();
+    w.lights.clear();
+    w.lights.push_back(PointLight(create_point(0, 0, -10), Color(1, 1, 1)));
+    Material m = Material();
+    Vector4f position = create_point(0, 0, 0);
+    Vector4f eyev = create_vector(0, 0, -1);
+    Vector4f normalv = create_vector(0, 0, -1);
+    bool in_shadow = true;
+    Color c = lighting(m, w.lights[0], position, eyev, normalv, in_shadow);
+    EXPECT_TRUE(c == Color(0.1, 0.1, 0.1));
+}
+
+TEST(TestShadows, TestNoShadowWhenNothingIsCollinearWithPointAndLight) {
+    World w = default_world();
+    Vector4f p = create_point(0, 10, 0);
+    EXPECT_FALSE(is_shadowed(w, p));
+}
+
+TEST(TestShadows, TestShadowWhenObjectIsBetweenPointAndLight) {
+    World w = default_world();
+    Vector4f p = create_point(10, -10, 10);
+    EXPECT_TRUE(is_shadowed(w, p));
+}
+
+TEST(TestShadows, TestNoShadowWhenObjectIsBehindLight) {
+    World w = default_world();
+    Vector4f p = create_point(-20, 20, -20);
+    EXPECT_FALSE(is_shadowed(w, p));
+}
+
+TEST(TestShadows, TestNoShadowWhenObjectIsBehindPoint) {
+    World w = default_world();
+    Vector4f p = create_point(-2, 2, -2);
+    EXPECT_FALSE(is_shadowed(w, p));
+}
+
+TEST(TestShadows, TestShadeHitIsGivenAnIntersectionInShadow) {
+    World w = default_world();
+    w.lights.clear();
+    w.lights.push_back(PointLight(create_point(0, 0, -10), Color(1, 1, 1)));
+    Sphere s1 = Sphere();
+    w.objects.push_back(s1);
+    Sphere s2 = Sphere();
+    s2.transform(Transform::translate(0, 0, 10));
+    w.objects.push_back(s2);
+    Ray r = Ray(create_point(0, 0, 5), create_vector(0, 0, 1));
+    Intersection i = Intersection(4, &w.objects[1]);
+    Computation comps = prepare_computations(i, r);
+    Color c = shade_hit(w, comps);
+    EXPECT_TRUE(c == Color(0.1, 0.1, 0.1));
+}
+
+TEST(TestShadows, TestHitShouldOffsetThePoint) {
+    Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
+    Sphere s = Sphere();
+    s.transform(Transform::translate(0, 0, 1));
+    Intersection i = Intersection(5, &s);
+    Computation comps = prepare_computations(i, r);
+    EXPECT_TRUE(comps.over_point[2] < -EPSILON / 2);
+    EXPECT_TRUE(comps.point[2] > comps.over_point[2]);
+}
+
 
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);

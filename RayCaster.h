@@ -83,6 +83,11 @@ std::vector<Intersection> intersect_world(World& world, Ray& ray) {
         return a.t < b.t;
     });
 
+    // Print out all intersections
+//    for (const Intersection& intersection : intersections) {
+//        std::cout << "Intersection: " << intersection.t << std::endl;
+//    }
+
     return intersections;
 }
 
@@ -108,14 +113,14 @@ Intersection hit(std::vector<Intersection> intersections) {
     return closest;
 }
 
-Color lighting(Material& material, PointLight& light, Vector4f& position, Vector4f& eye, Vector4f& normal) {
+Color lighting(Material& material, PointLight& light, Vector4f& position, Vector4f& eye, Vector4f& normal, bool in_shadow) {
     Color effective_color = material.color * light.intensity();
     Vector4f light_vector = (light.position() - position).normalized();
     float light_dot_normal = light_vector.dot(normal);
     Color ambient = effective_color * material.ambient;
     Color diffuse;
     Color specular;
-    if (light_dot_normal < 0) {
+    if (light_dot_normal < 0 || in_shadow) {
         diffuse = Color(0.0f, 0.0f, 0.0f);
         specular = Color(0.0f, 0.0f, 0.0f);
     } else {
@@ -134,6 +139,22 @@ Color lighting(Material& material, PointLight& light, Vector4f& position, Vector
 }
 
 
+bool is_shadowed(World& world, Vector4f& point) {
+    Vector4f v = world.lights[0].position() - point;
+    float distance = v.norm();
+    Vector4f direction = v.normalized();
+    Ray r = Ray(point, direction);
+    std::vector<Intersection> intersections = intersect_world(world, r);
+    // print out all intersections
+//    for (Intersection i : intersections) {
+//        std::cout << "Intersection: " << i.t << std::endl;
+//    }
+    Intersection h = hit(intersections);
+    if (h.object != nullptr && h.t < distance) {
+        return true;
+    }
+    return false;
+}
 
 class Computation {
 public:
@@ -146,24 +167,7 @@ public:
     Vector4f eyev;
     Vector4f normalv;
     bool inside;
-
-    bool is_inside() {
-        return inside;
-    }
-
-    Vector4f over_point() {
-        Vector4f offset = normalv * 0.0001f;
-        return point + offset;
-    }
-
-    Vector4f under_point() {
-        Vector4f offset = normalv * -0.0001f;
-        return point + offset;
-    }
-
-    Vector4f reflectv() {
-        return reflect(eyev, normalv);
-    }
+    Vector4f over_point;
 };
 
 Computation prepare_computations(Intersection& intersection, Ray& ray) {
@@ -175,14 +179,19 @@ Computation prepare_computations(Intersection& intersection, Ray& ray) {
         inside = true;
         normal = -normal;
     }
-    return Computation(intersection.t, intersection.object, point, eye, normal, inside);
+    Vector4f over_point = point + normal * EPSILON;
+    Computation comps = Computation(intersection.t, intersection.object, point, eye, normal, inside);
+    comps.over_point = over_point;
+    return comps;
 }
 
 Color shade_hit(World& world, Computation& comps) {
     Color surface = Color(0.0f, 0.0f, 0.0f);
-    for (PointLight& light : world.lights) {
-        surface = surface + lighting(comps.object->material, light, comps.point, comps.eyev, comps.normalv);
-    }
+    Vector4f point = comps.over_point;
+    bool shadowed = is_shadowed(world, point);
+//    for (PointLight& light : world.lights) {
+    surface = surface + lighting(comps.object->material, world.lights[0], comps.point, comps.eyev, comps.normalv, shadowed);
+ //   }
     return surface;
 }
 
@@ -218,5 +227,7 @@ Canvas render(Camera camera, World world) {
     }
     return image;
 }
+
+
 
 #endif //RAYCASTER_RAYCASTER_H
