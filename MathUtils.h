@@ -11,7 +11,7 @@
 using Vector3f = Eigen::Vector3f;
 using Vector4f = Eigen::Vector4f;
 
-constexpr float EPSILON = 0.00001f;
+constexpr float EPSILON = 0.001f;
 
 bool is_equal(float a, float b, float epsilon = EPSILON);
 

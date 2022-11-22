@@ -53,7 +53,7 @@ int main() {
     world.add_light(PointLight(create_point(-10.0f, 10.0f, -10.0f), Color(1.0f, 1.0f, 1.0f)));
     std::cout << "World lights size: " << world.lights.size() << std::endl;
 
-    Camera camera(500, 250, M_PI / 3.0f);
+    Camera camera(1000, 500, M_PI / 3.0f);
     camera.transform = Transform::view_transform(create_point(0.0f, 1.5f, -5.0f), create_point(0.0f, 1.0f, 0.0f), create_vector(0.0f, 1.0f, 0.0f));
 
     Canvas canvas = render(camera, world);
