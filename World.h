@@ -5,14 +5,9 @@
 #ifndef RAYCASTER_WORLD_H
 #define RAYCASTER_WORLD_H
 
-#include "Color.h"
-#include "Lights.h"
-#include "Material.h"
-#include "Sphere.h"
-#include "Transform.h"
 #include <vector>
-#include <Eigen/Core>
-#include <Eigen/Geometry>
+#include "Lights.h"
+#include "Sphere.h"
 
 class World {
 public:

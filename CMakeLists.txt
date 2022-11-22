@@ -28,23 +28,45 @@ set(BUILD_TESTING OFF)
 set(EIGEN_BUILD_PKGCONFIG OFF)
 FetchContent_MakeAvailable(Eigen)
 
-add_library(MathUtils STATIC MathUtils.cpp MathUtils.h)
-target_link_libraries(MathUtils Eigen3::Eigen)
-add_library(Canvas STATIC Canvas.cpp Canvas.h Color.h)
-target_link_libraries(Canvas MathUtils)
-add_library(Ray STATIC RayCaster.cpp RayCaster.h Sphere.h)
-target_link_libraries(Ray MathUtils Eigen3::Eigen)
-add_library(Transform STATIC Transform.cpp Transform.h)
-target_link_libraries(Transform MathUtils Eigen3::Eigen)
-add_library(Color STATIC Color.h Color.cpp)
-target_link_libraries(Color MathUtils Eigen3::Eigen)
-add_library(Lights STATIC Lights.h Lights.cpp)
-target_link_libraries(Lights MathUtils Color Eigen3::Eigen)
-add_library(World STATIC World.h World.cpp)
-target_link_libraries(World MathUtils Color Ray Transform Canvas Lights Eigen3::Eigen)
+add_executable(RayCaster
+        main.cpp
 
-add_executable(RayCaster main.cpp)
-target_link_libraries(RayCaster MathUtils Canvas Ray World Eigen3::Eigen)
+        # Headers
+        Canvas.h
+        Color.h
+        Lights.h
+        MathUtils.h
+        RayCaster.h
+        Sphere.h
 
-add_executable(RayCasterTest test.cpp Material.h)
-target_link_libraries(RayCasterTest gtest gtest_main gmock gmock_main MathUtils Canvas Ray Transform Lights World Eigen3::Eigen)
+        # Sources
+        Canvas.cpp
+        Transform.cpp
+        )
+target_link_libraries(RayCaster Eigen3::Eigen)
+
+add_executable(RayCasterTest
+        test.cpp
+
+        # Headers
+        Camera.h
+        Canvas.h
+        Color.h
+        Lights.h
+        MathUtils.h
+        Material.h
+        RayCaster.h
+        Sphere.h
+        Transform.h
+        World.h
+
+        # Sources
+        Canvas.cpp
+#        Color.cpp
+#        Lights.cpp
+        MathUtils.cpp
+#        RayCaster.cpp
+        Transform.cpp
+        World.cpp
+        )
+target_link_libraries(RayCasterTest gtest gtest_main gmock gmock_main Eigen3::Eigen)

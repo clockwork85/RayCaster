@@ -2,9 +2,7 @@
 // Created by Bray, Matthew D ERDC-RDE-GSL-MS CIV on 11/11/22.
 //
 
-#include "MathUtils.h"
 #include "Canvas.h"
-
 
 // Get the color at a given pixel
 Color Canvas::pixel_at(int x, int y) const {

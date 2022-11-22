@@ -46,5 +46,4 @@ namespace Transform {
     Matrix4f view_transform(const Vector4f& from, const Vector4f& to, const Vector4f& up);
 }
 
-
 #endif //RAYCASTER_TRANSFORMS_H

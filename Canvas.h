@@ -6,7 +6,6 @@
 #define RAYCASTER_CANVAS_H
 
 #include "Color.h"
-#include "MathUtils.h"
 #include <iostream>
 #include <fstream>
 
