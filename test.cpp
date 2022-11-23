@@ -682,38 +682,38 @@ TEST(TestRayCaster, TestHitWhenAllIntersectionsHavePositiveT) {
     Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
     Sphere s = Sphere();
     std::vector<Intersection> intersections = {Intersection(1, &s), Intersection(2, &s)};
-    Intersection i = hit(intersections);
-    EXPECT_EQ(i.t, intersections[0].t);
+    const auto i = hit(intersections);
+    EXPECT_EQ(i->t, intersections[0].t);
 }
 
 TEST(TestRayCaster, TestHitWhenSomeIntersectionsHaveNegativeT) {
     Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
     Sphere s = Sphere();
     std::vector<Intersection> intersections = {Intersection(-1, &s), Intersection(1, &s)};
-    Intersection i = hit(intersections);
-    EXPECT_EQ(i.t, intersections[1].t);
+    const auto i = hit(intersections);
+    EXPECT_EQ(i->t, intersections[1].t);
 }
 
 TEST(TestRayCaster, TestHitWhenAllIntersectionsHaveNegativeT) {
     Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
     Sphere s = Sphere();
     std::vector<Intersection> intersections = {Intersection(-2, &s), Intersection(-1, &s)};
-    Intersection i = hit(intersections);
-    EXPECT_EQ(i.object, nullptr);
+    const auto i = hit(intersections);
+    EXPECT_EQ(i.has_value(), false);
 }
 
 TEST(TestRayCaster, TestHitIsAlwaysLowestNonNegativeIntersection) {
     Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
     Sphere s = Sphere();
     std::vector<Intersection> intersections = {Intersection(5, &s), Intersection(7, &s), Intersection(-3, &s), Intersection(2, &s)};
-    Intersection i = hit(intersections);
-    EXPECT_EQ(i.t, intersections[3].t);
+    const auto i = hit(intersections);
+    EXPECT_EQ(i->t, intersections[3].t);
 }
 
 TEST(TestRayTransforms, TestTranslateRay) {
     Ray r = Ray(create_point(1, 2, 3), create_vector(0, 1, 0));
     Matrix4f translation = Transform::translate(3, 4, 5);
-    Ray r2 = transform_ray(r, translation);
+    Ray r2 = r.transform_ray(translation);
     EXPECT_TRUE(r2.origin == create_point(4, 6, 8));
     EXPECT_TRUE(r2.direction == create_vector(0, 1, 0));
 }
@@ -721,7 +721,7 @@ TEST(TestRayTransforms, TestTranslateRay) {
 TEST(TestRayTransforms, TestScaleRay) {
     Ray r = Ray(create_point(1, 2, 3), create_vector(0, 1, 0));
     Matrix4f scale = Transform::scale(2, 3, 4);
-    Ray r2 = transform_ray(r, scale);
+    Ray r2 = r.transform_ray(scale);
     EXPECT_TRUE(r2.origin == create_point(2, 6, 12));
     EXPECT_TRUE(r2.direction == create_vector(0, 3, 0));
 }

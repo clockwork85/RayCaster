@@ -7,8 +7,11 @@
 
 #include "Camera.h"
 #include "Canvas.h"
+#include "Computation.h"
 #include "Lights.h"
+#include "Intersection.h"
 #include "MathUtils.h"
+#include "Ray.h"
 #include "Sphere.h"
 #include "World.h"
 #include <Eigen/Dense>
@@ -21,38 +24,9 @@ using Vector4f = Eigen::Vector4f;
 using Matrix4f = Eigen::Matrix4f;
 
 
-class Intersection {
-public:
-    Intersection() : t(0.0f), object(nullptr) {}
-    Intersection(float t, Sphere* sphere) : t(t), object(sphere) {}
-
-    float t;
-    Sphere* object;
-};
-
-class Ray {
-public:
-    Ray() : origin(0.0f, 0.0f, 0.0f, 1.0f), direction(0.0f, 0.0f, 0.0f, 0.0f) {}
-    Ray(const Vector4f& origin, const Vector4f& direction) : origin(origin), direction(direction) {}
-    Ray(const Ray& ray) : origin(ray.origin), direction(ray.direction) {}
-
-    Vector4f origin;
-    Vector4f direction;
-
-    Vector4f position(float t) const {
-        return origin + (direction * t);
-    }
-};
-
-Ray transform_ray(Ray& ray, Matrix4f transform) {
-    Vector4f origin = transform * ray.origin;
-    Vector4f direction = transform * ray.direction;
-    return Ray(origin, direction);
-}
-
-std::vector<Intersection> intersect(Sphere* sphere, Ray& ray) {
+std::vector<Intersection> intersect(const Sphere* sphere, const Ray& ray) {
     std::vector<Intersection> intersections;
-    Ray ray_local = transform_ray(ray, sphere->inverse());
+    Ray ray_local = ray.transform_ray(sphere->inverse());
     Vector4f sphere_to_ray = ray_local.origin - create_point(0.0f, 0.0f, 0.0f);
     float a = ray_local.direction.dot(ray_local.direction);
     float b = 2 * ray_local.direction.dot(sphere_to_ray);
@@ -68,9 +42,9 @@ std::vector<Intersection> intersect(Sphere* sphere, Ray& ray) {
     return intersections;
 }
 
-std::vector<Intersection> intersect_world(World& world, Ray& ray) {
+std::vector<Intersection> intersect_world(const World& world, const Ray& ray) {
     std::vector<Intersection> intersections;
-    for (Sphere& sphere : world.objects) {
+    for (const Sphere& sphere : world.objects) {
         std::vector<Intersection> sphere_intersections = intersect(&sphere, ray);
         // Put all intersections into one vector
         for ( const Intersection& intersection : sphere_intersections) {
@@ -91,7 +65,7 @@ std::vector<Intersection> intersect_world(World& world, Ray& ray) {
     return intersections;
 }
 
-Vector4f normal_at(Sphere* sphere, Vector4f& world_point) {
+Vector4f normal_at(const Sphere* sphere, const Vector4f& world_point) {
     Vector4f object_point = sphere->inverse() * world_point;
     Vector4f object_normal = object_point - create_point(0.0f, 0.0f, 0.0f);
     Vector4f world_normal = sphere->inverse().transpose() * object_normal;
@@ -99,21 +73,30 @@ Vector4f normal_at(Sphere* sphere, Vector4f& world_point) {
     return world_normal.normalized();
 }
 
-Vector4f reflect(Vector4f& in, Vector4f& normal) {
+Vector4f reflect(const Vector4f& in, const Vector4f& normal) {
     return in - (normal * 2 * in.dot(normal));
 }
 
-Intersection hit(std::vector<Intersection> intersections) {
-    Intersection closest = Intersection();
+std::optional<Intersection> hit(std::vector<Intersection> intersections) {
+//    for (Intersection intersection : intersections) {
+//        if (intersection.t > 0 && (intersection.t < closest.t || closest.t == 0)) {
+//            closest = intersection;
+//        }
+//    }
+//    return closest;
+    std::sort(intersections.begin(), intersections.end(), [](const Intersection& a, const Intersection& b) {
+        return a.t < b.t;
+    });
+
     for (Intersection intersection : intersections) {
-        if (intersection.t > 0 && (intersection.t < closest.t || closest.t == 0)) {
-            closest = intersection;
+        if (intersection.t >= 0) {
+            return {intersection};
         }
     }
-    return closest;
+    return {};
 }
 
-Color lighting(Material& material, PointLight& light, Vector4f& position, Vector4f& eye, Vector4f& normal, bool in_shadow) {
+Color lighting(const Material& material, const PointLight& light, const Vector4f& position, const Vector4f& eye, const Vector4f& normal, const bool in_shadow) {
     Color effective_color = material.color * light.intensity();
     Vector4f light_vector = (light.position() - position).normalized();
     float light_dot_normal = light_vector.dot(normal);
@@ -139,7 +122,7 @@ Color lighting(Material& material, PointLight& light, Vector4f& position, Vector
 }
 
 
-bool is_shadowed(World& world, Vector4f& point) {
+bool is_shadowed(const World& world, const Vector4f& point) {
     Vector4f v = world.lights[0].position() - point;
     float distance = v.norm();
     Vector4f direction = v.normalized();
@@ -149,28 +132,16 @@ bool is_shadowed(World& world, Vector4f& point) {
 //    for (Intersection i : intersections) {
 //        std::cout << "Intersection: " << i.t << std::endl;
 //    }
-    Intersection h = hit(intersections);
-    if (h.object != nullptr && h.t < distance) {
-        return true;
-    }
-    return false;
+    const auto h = hit(intersections);
+//    if (h.object != nullptr && h.t < distance) {
+//        return true;
+//    }
+//    return false;
+    return h.has_value() && h.value().t < distance;
 }
 
-class Computation {
-public:
-    Computation() : t(0.0f), object(nullptr) {}
-    Computation(float t, Sphere* object, Vector4f& point, Vector4f& eyev, Vector4f& normalv, bool inside) : t(t), object(object), point(point), eyev(eyev), normalv(normalv), inside(inside) {}
 
-    float t;
-    Sphere* object;
-    Vector4f point;
-    Vector4f eyev;
-    Vector4f normalv;
-    bool inside;
-    Vector4f over_point;
-};
-
-Computation prepare_computations(Intersection& intersection, Ray& ray) {
+Computation prepare_computations(const Intersection& intersection, const Ray& ray) {
     Vector4f point = ray.position(intersection.t);
     Vector4f eye = -ray.direction;
     Vector4f normal = normal_at(intersection.object, point);
@@ -180,12 +151,18 @@ Computation prepare_computations(Intersection& intersection, Ray& ray) {
         normal = -normal;
     }
     Vector4f over_point = point + normal * EPSILON;
-    Computation comps = Computation(intersection.t, intersection.object, point, eye, normal, inside);
+    Computation comps;
+    comps.t = intersection.t;
+    comps.object = intersection.object;
+    comps.point = point;
+    comps.eyev = eye;
+    comps.normalv = normal;
+    comps.inside = inside;
     comps.over_point = over_point;
     return comps;
 }
 
-Color shade_hit(World& world, Computation& comps) {
+Color shade_hit(const World& world, const Computation& comps) {
     Color surface = Color(0.0f, 0.0f, 0.0f);
     Vector4f point = comps.over_point;
     bool shadowed = is_shadowed(world, point);
@@ -195,14 +172,19 @@ Color shade_hit(World& world, Computation& comps) {
     return surface;
 }
 
-Color color_at(World& world, Ray& ray) {
+Color color_at(const World& world, const Ray& ray) {
     std::vector<Intersection> intersections = intersect_world(world, ray);
-    Intersection intersection = hit(intersections);
-    if (intersection.t == 0) {
+    const auto intersection = hit(intersections);
+    if(!intersection.has_value()) {
         return Color(0.0f, 0.0f, 0.0f);
     }
-    Computation comps = prepare_computations(intersection, ray);
+    const auto comps = prepare_computations(intersection.value(), ray);
     return shade_hit(world, comps);
+//    if (intersection.t == 0) {
+//        return Color(0.0f, 0.0f, 0.0f);
+//    }
+//    Computation comps = prepare_computations(intersection, ray);
+//    return shade_hit(world, comps);
 }
 
 Ray ray_for_pixel(Camera camera, int px, int py) {

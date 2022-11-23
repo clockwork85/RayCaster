@@ -68,5 +68,5 @@ add_executable(RayCasterTest
 #        RayCaster.cpp
         Transform.cpp
         World.cpp
-        )
-target_link_libraries(RayCasterTest gtest gtest_main gmock gmock_main Eigen3::Eigen)
+        Shape.h Intersection.h Ray.h Computation.h)
+target_link_libraries(RayCasterTest gtest gtest_main Eigen3::Eigen)
