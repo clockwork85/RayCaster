@@ -45,6 +45,7 @@ add_executable(RayCaster
         Transform.cpp
         Sphere.cpp
         RayCaster.cpp
+        MathUtils.cpp
         )
 target_link_libraries(RayCaster Eigen3::Eigen)
 

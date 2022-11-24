@@ -16,10 +16,9 @@ using Matrix4f = Eigen::Matrix4f;
 int main() {
 
     auto floor = Plane();
-    floor.material.pattern = gradient_pattern(WHITE, BLACK);
-    floor.material.pattern->set_transform(Transform::scale(10, 10, 10));
-    floor.material.pattern->set_transform(Transform::translate(25, 50, 25));
-    floor.material.color = Color(1.0f, 0.9f, 0.9f);
+    floor.material.pattern = stripe_pattern(WHITE, BLACK);
+    floor.material.pattern->set_transform(Transform::scale(3, 3, 3));
+    floor.material.pattern->set_transform(Transform::rotate_y(-M_PI_2));
 
     auto middle = Sphere();
     middle.material.pattern = stripe_pattern(RED, GREEN);
@@ -56,7 +55,7 @@ int main() {
 
     world.add_light(PointLight(create_point(-10.0f, 10.0f, -10.0f), Color(1.0f, 1.0f, 1.0f)));
 
-    Camera camera(500, 250, M_PI / 3.0f);
+    Camera camera(1000, 500, M_PI / 3.0f);
     camera.transform = Transform::view_transform(create_point(0.0f, 1.5f, -5.0f), create_point(0.0f, 1.0f, 0.0f), create_vector(0.0f, 1.0f, 0.0f));
 
     Canvas canvas = render(camera, world);

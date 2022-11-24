@@ -5,6 +5,7 @@
 #ifndef RAYCASTER_PATTERNS_H
 #define RAYCASTER_PATTERNS_H
 
+#include "MathUtils.h"
 #include "Pattern.h"
 
 class StripedPattern : public Pattern {
@@ -48,7 +49,7 @@ public:
 
     Color pattern_at(const Vector4f& point) const override {
         float distance = sqrt(point.x() * point.x() + point.z() * point.z());
-        if((int)floor(distance) % 2 == 0) {
+        if(is_equal((int)floor(distance) % 2, 0)) {
             return a;
         } else {
             return b;
@@ -66,8 +67,7 @@ public:
     CheckerPattern(const Color& a, const Color& b) : a(a), b(b) {}
 
     Color pattern_at(const Vector4f& point) const override {
-        int distance = (int)floor(point.x()) + (int)floor(point.y()) + (int)floor(point.z());
-        if(distance % 2 == 0) {
+        if(((int)floor(point[0]) + (int)floor(point[1]) + (int)floor(point[2])) % 2 == 0) {
             return a;
         } else {
             return b;

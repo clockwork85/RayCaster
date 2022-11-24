@@ -1344,6 +1344,9 @@ TEST(TestPatterns, TestCheckerBoardPatternRepeatsInY) {
     EXPECT_TRUE(pattern->pattern_at(create_point(0, 0, 0)) == WHITE);
     EXPECT_TRUE(pattern->pattern_at(create_point(0, 0.99, 0)) == WHITE);
     EXPECT_TRUE(pattern->pattern_at(create_point(0, 1.01, 0)) == BLACK);
+    EXPECT_TRUE(pattern->pattern_at(create_point(0, 1.02, 0)) == BLACK);
+    EXPECT_TRUE(pattern->pattern_at(create_point(0, 1.99, 0)) == BLACK);
+    EXPECT_TRUE(pattern->pattern_at(create_point(0, 2.01, 0)) == WHITE);
 }
 
 TEST(TestPatterns, TestCheckerBoardPatternRepeatsInZ) {

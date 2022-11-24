@@ -106,14 +106,14 @@ Computation prepare_computations(const Intersection& intersection, const Ray& ra
 }
 
 Color shade_hit(const World& world, const Computation& comps) {
-    Color surface = Color(0.0f, 0.0f, 0.0f);
+    // Color surface = Color(0.0f, 0.0f, 0.0f);
     bool shadowed = is_shadowed(world, world.lights[0].position(), comps.over_point);
 //    std::cout << "Shadowed: " << shadowed << std::endl;
 //    std::cout << "Point: " << comps.point << std::endl;
 //    std::cout << "Over point: " << comps.over_point << std::endl;
 
 //    for (PointLight& light : world.lights) {
-    surface = surface + lighting(comps.object->material, comps.object, world.lights[0], comps.point, comps.eyev, comps.normalv, shadowed);
+    Color surface =  lighting(comps.object->material, comps.object, world.lights[0], comps.point, comps.eyev, comps.normalv, shadowed);
     //   }
     return surface;
 }
