@@ -78,5 +78,5 @@ add_executable(RayCasterTest
         RayCaster.cpp
         Transform.cpp
         World.cpp
-        )
+        Patterns.h)
 target_link_libraries(RayCasterTest gtest gtest_main Eigen3::Eigen)

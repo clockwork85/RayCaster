@@ -73,7 +73,7 @@ private:
 inline Color pattern_at_object(const std::shared_ptr<Pattern>& pattern, const Shape* shape, const Vector4f& world_point) {
     const Vector4f object_point = shape->inverse() * world_point;
     const Vector4f pattern_point = pattern->inverse() * object_point;
-    return pattern->stripe_at(pattern_point);
+    return pattern->pattern_at(pattern_point);
 }
 
 #endif //RAYCASTER_SHAPE_H

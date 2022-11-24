@@ -12,6 +12,7 @@
 #include "Lights.h"
 #include "Material.h"
 #include "Pattern.h"
+#include "Patterns.h"
 #include "Plane.h"
 #include "RayCaster.h"
 #include "Sphere.h"
@@ -1260,34 +1261,28 @@ TEST(TestPatterns, TestColorConstants) {
     EXPECT_TRUE(Color(0, 0, 1) == BLUE);
 }
 
-TEST(TestPatternns, TestCreate) {
-    const auto p = stripe_pattern(WHITE, BLACK);
-    EXPECT_TRUE(p->a == WHITE);
-    EXPECT_TRUE(p->b == BLACK);
-}
-
 TEST(TestPatterns, TestStripePatternConstantInY) {
     const auto p = stripe_pattern(WHITE, BLACK);
-    EXPECT_TRUE(p->stripe_at(create_point(0, 0, 0)) == WHITE);
-    EXPECT_TRUE(p->stripe_at(create_point(0, 1, 0)) == WHITE);
-    EXPECT_TRUE(p->stripe_at(create_point(0, 2, 0)) == WHITE);
+    EXPECT_TRUE(p->pattern_at(create_point(0, 0, 0)) == WHITE);
+    EXPECT_TRUE(p->pattern_at(create_point(0, 1, 0)) == WHITE);
+    EXPECT_TRUE(p->pattern_at(create_point(0, 2, 0)) == WHITE);
 }
 
 TEST(TestPatterns, TestStripePatternConstantInZ) {
     const auto p = stripe_pattern(WHITE, BLACK);
-    EXPECT_TRUE(p->stripe_at(create_point(0, 0, 0)) == WHITE);
-    EXPECT_TRUE(p->stripe_at(create_point(0, 0, 1)) == WHITE);
-    EXPECT_TRUE(p->stripe_at(create_point(0, 0, 2)) == WHITE);
+    EXPECT_TRUE(p->pattern_at(create_point(0, 0, 0)) == WHITE);
+    EXPECT_TRUE(p->pattern_at(create_point(0, 0, 1)) == WHITE);
+    EXPECT_TRUE(p->pattern_at(create_point(0, 0, 2)) == WHITE);
 }
 
 TEST(TestPatterns, TestStripePatternAlternatesInX) {
     const auto p = stripe_pattern(WHITE, BLACK);
-    EXPECT_TRUE(p->stripe_at(create_point(0, 0, 0)) == WHITE);
-    EXPECT_TRUE(p->stripe_at(create_point(0.9, 0, 0)) == WHITE);
-    EXPECT_TRUE(p->stripe_at(create_point(1, 0, 0)) == BLACK);
-    EXPECT_TRUE(p->stripe_at(create_point(-0.1, 0, 0)) == BLACK);
-    EXPECT_TRUE(p->stripe_at(create_point(-1, 0, 0)) == BLACK);
-    EXPECT_TRUE(p->stripe_at(create_point(-1.1, 0, 0)) == WHITE);
+    EXPECT_TRUE(p->pattern_at(create_point(0, 0, 0)) == WHITE);
+    EXPECT_TRUE(p->pattern_at(create_point(0.9, 0, 0)) == WHITE);
+    EXPECT_TRUE(p->pattern_at(create_point(1, 0, 0)) == BLACK);
+    EXPECT_TRUE(p->pattern_at(create_point(-0.1, 0, 0)) == BLACK);
+    EXPECT_TRUE(p->pattern_at(create_point(-1, 0, 0)) == BLACK);
+    EXPECT_TRUE(p->pattern_at(create_point(-1.1, 0, 0)) == WHITE);
 }
 
 TEST(TestPatterns, TestLightingWithAPatternApplied) {
@@ -1321,9 +1316,41 @@ TEST(TestPatterns, TestStripesWithObjectAndPatternTransformation) {
     EXPECT_TRUE(c == WHITE);
 }
 
-TEST(TestPatterns, TestDefaultPatternTransformation) {
-    const auto pattern = Pattern();
-    EXPECT_TRUE(pattern->transform == Transform::identity());
+TEST(TestPatterns, TestGradientLinearlyInterpolatesBetweenColor) {
+    const auto pattern = gradient_pattern(WHITE, BLACK);
+    EXPECT_TRUE(pattern->pattern_at(create_point(0, 0, 0)) == WHITE);
+    EXPECT_TRUE(pattern->pattern_at(create_point(0.25, 0, 0)) == Color(0.75, 0.75, 0.75));
+    EXPECT_TRUE(pattern->pattern_at(create_point(0.5, 0, 0)) == Color(0.5, 0.5, 0.5));
+    EXPECT_TRUE(pattern->pattern_at(create_point(0.75, 0, 0)) == Color(0.25, 0.25, 0.25));
+}
+
+TEST(TestPatterns, TestRingPatternExtendsInBothXandZ) {
+    const auto pattern = ring_pattern(WHITE, BLACK);
+    EXPECT_TRUE(pattern->pattern_at(create_point(0, 0, 0)) == WHITE);
+    EXPECT_TRUE(pattern->pattern_at(create_point(1, 0, 0)) == BLACK);
+    EXPECT_TRUE(pattern->pattern_at(create_point(0, 0, 1)) == BLACK);
+    EXPECT_TRUE(pattern->pattern_at(create_point(0.708, 0, 0.708)) == BLACK);
+}
+
+TEST(TestPatterns, TestCheckerBoardPatternRepeatsInX) {
+    const auto pattern = checker_pattern(WHITE, BLACK);
+    EXPECT_TRUE(pattern->pattern_at(create_point(0, 0, 0)) == WHITE);
+    EXPECT_TRUE(pattern->pattern_at(create_point(0.99, 0, 0)) == WHITE);
+    EXPECT_TRUE(pattern->pattern_at(create_point(1.01, 0, 0)) == BLACK);
+}
+
+TEST(TestPatterns, TestCheckerBoardPatternRepeatsInY) {
+    const auto pattern = checker_pattern(WHITE, BLACK);
+    EXPECT_TRUE(pattern->pattern_at(create_point(0, 0, 0)) == WHITE);
+    EXPECT_TRUE(pattern->pattern_at(create_point(0, 0.99, 0)) == WHITE);
+    EXPECT_TRUE(pattern->pattern_at(create_point(0, 1.01, 0)) == BLACK);
+}
+
+TEST(TestPatterns, TestCheckerBoardPatternRepeatsInZ) {
+    const auto pattern = checker_pattern(WHITE, BLACK);
+    EXPECT_TRUE(pattern->pattern_at(create_point(0, 0, 0)) == WHITE);
+    EXPECT_TRUE(pattern->pattern_at(create_point(0, 0, 0.99)) == WHITE);
+    EXPECT_TRUE(pattern->pattern_at(create_point(0, 0, 1.01)) == BLACK);
 }
 
 int main(int argc, char **argv) {
