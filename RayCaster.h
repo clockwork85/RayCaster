@@ -44,11 +44,11 @@ using Matrix4f = Eigen::Matrix4f;
 
 std::vector<Intersection> intersect_world(const World& world, const Ray& ray) {
     std::vector<Intersection> totintersections;
-    for (const Sphere& sphere : world.objects) {
-        std::vector<Intersection> intersections = sphere.intersect(ray);
+    for (const auto& shape: world.objects) {
+        std::vector<Intersection> intersections = shape->intersect(ray);
         // Put all intersections into one vector
         for ( const Intersection& intersection : intersections) {
-            totintersections.push_back(intersection);
+            totintersections.emplace_back(intersection);
         }
     }
 

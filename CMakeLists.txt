@@ -29,7 +29,7 @@ set(EIGEN_BUILD_PKGCONFIG OFF)
 FetchContent_MakeAvailable(Eigen)
 
 add_executable(RayCaster
-        elongatedspherescene.cpp
+        main.cpp
 
         # Headers
         Canvas.h
@@ -70,5 +70,5 @@ add_executable(RayCasterTest
 #        RayCaster.cpp
         Transform.cpp
         World.cpp
-        Shape.h Intersection.h Ray.h Computation.h Sphere.cpp)
+        Shape.h Intersection.h Ray.h Computation.h Sphere.cpp Plane.cpp Plane.h)
 target_link_libraries(RayCasterTest gtest gtest_main Eigen3::Eigen)

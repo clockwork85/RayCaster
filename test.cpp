@@ -11,6 +11,7 @@
 #include "Color.h"
 #include "Lights.h"
 #include "Material.h"
+#include "Plane.h"
 #include "RayCaster.h"
 #include "Sphere.h"
 #include "Transform.h"
@@ -1149,6 +1150,90 @@ TEST(TestShadows, TestHitShouldOffsetThePoint) {
     EXPECT_TRUE(comps.point[2] > comps.over_point[2]);
 }
 
+TEST(TestShapes, TestTheDefaultTransformation) {
+    Sphere s = Sphere();
+    EXPECT_TRUE(s.matrix() == Matrix4f::Identity());
+}
+
+TEST(TestShapes, TestDefaultMaterial) {
+    Sphere s = Sphere();
+    EXPECT_TRUE(s.material == Material());
+}
+
+TEST(TestShapes, TestAssigningAMaterial) {
+    Sphere s = Sphere();
+    Material m = Material();
+    m.ambient = 1;
+    s.set_material(m);
+    EXPECT_TRUE(s.material == m);
+}
+
+//TEST(TestShapes, TestIntersectingAScaledShapeWithARay) {
+//    Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
+//    Sphere s = Sphere();
+//    s.set_transform(Transform::scale(2, 2, 2));
+//    std::vector<Intersection> xs = s.intersect( r);
+//    std::cout << "Ray origin: " << r.origin << std::endl;
+//    EXPECT_TRUE(r.origin == create_point(0, 0, -2.5));
+//    EXPECT_TRUE(r.direction == create_vector(0, 0, 0.5));
+//
+//}
+//
+//TEST(TestShapes, TestIntersectingATranslatedShapeWithARay) {
+//    Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
+//    Sphere s = Sphere();
+//    s.set_transform(Transform::translate(5, 0, 0));
+//    std::vector<Intersection> xs = s.intersect(r);
+//    EXPECT_TRUE(r.origin == create_point(-5, 0, -5));
+//    EXPECT_TRUE(r.direction == create_vector(0, 0, 1));
+//}
+
+TEST(TestShapes, TestComputingTheNormalOnATranslatedShape) {
+    Sphere s = Sphere();
+    s.set_transform(Transform::translate(0, 1, 0));
+    Vector4f n = s.normal_at(create_point(0, 1.70711, -0.70711));
+    EXPECT_TRUE(n.isApprox(create_vector(0, 0.70711, -0.70711)));
+}
+
+TEST(TestShapes, TestComputingTheNormalOnATransformedShape) {
+    Sphere s = Sphere();
+    s.set_transform(Transform::scale(1, 0.5, 1) * Transform::rotate_z(M_PI / 5));
+    Vector4f n = s.normal_at(create_point(0, sqrt(2) / 2, -sqrt(2) / 2));
+    EXPECT_TRUE(n.isApprox(create_vector(0, 0.97014, -0.24254)));
+}
+
+TEST(TestPlane, TestTheNormalOfAPlaneIsConstantEverywhere) {
+    Plane p = Plane();
+    Vector4f n1 = p.normal_at(create_point(0, 0, 0));
+    Vector4f n2 = p.normal_at(create_point(10, 0, -10));
+    Vector4f n3 = p.normal_at(create_point(-5, 0, 150));
+    EXPECT_TRUE(n1 == create_vector(0, 1, 0));
+    EXPECT_TRUE(n2 == create_vector(0, 1, 0));
+    EXPECT_TRUE(n3 == create_vector(0, 1, 0));
+}
+
+TEST(TestPlane, TestIntersectWithARayParallelToThePlane) {
+    Plane p = Plane();
+    Ray r = Ray(create_point(0, 10, 0), create_vector(0, 0, 1));
+    std::vector<Intersection> xs = p.intersect(r);
+    EXPECT_TRUE(xs.size() == 0);
+}
+
+TEST(TestPlane, TestIntersectWithACoplanarRay) {
+    Plane p = Plane();
+    Ray r = Ray(create_point(0, 0, 0), create_vector(0, 0, 1));
+    std::vector<Intersection> xs = p.intersect(r);
+    EXPECT_TRUE(xs.size() == 0);
+}
+
+TEST(TestPlane, TestARayIntersectingAPlaneFromAbove) {
+    Plane p = Plane();
+    Ray r = Ray(create_point(0, 1, 0), create_vector(0, -1, 0));
+    std::vector<Intersection> xs = p.intersect(r);
+    EXPECT_TRUE(xs.size() == 1);
+    EXPECT_TRUE(xs[0].t == 1);
+    EXPECT_TRUE(xs[0].object == &p);
+}
 
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);

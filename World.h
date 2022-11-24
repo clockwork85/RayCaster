@@ -5,9 +5,10 @@
 #ifndef RAYCASTER_WORLD_H
 #define RAYCASTER_WORLD_H
 
+#include <memory>
 #include <vector>
 #include "Lights.h"
-#include "Sphere.h"
+#include "Shape.h"
 #include "Transform.h"
 
 class World {
@@ -15,10 +16,15 @@ public:
     // Empty world contains no objects or lights
     World() : objects(), lights() {}
 
-    std::vector<Sphere> objects{};
+//    std::vector<Shape> objects{};
+    std::vector<std::shared_ptr<Shape>> objects{};
     std::vector<PointLight> lights{};
 
-    void add_object(const Sphere& object) { objects.push_back(object); }
+    template<class ShapeType>
+    void add_object(const ShapeType& object) {
+        objects.emplace_back(std::make_unique<ShapeType>(object));
+    }
+
     void add_light(const PointLight& light) { lights.push_back(light); }
 };
 
