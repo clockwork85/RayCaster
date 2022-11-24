@@ -61,6 +61,13 @@ add_executable(RayCasterTest
         Sphere.h
         Transform.h
         World.h
+        Shape.h
+        Intersection.h
+        Ray.h
+        Computation.h
+        Sphere.cpp
+        Plane.h
+        Pattern.h
 
         # Sources
         Canvas.cpp
@@ -70,5 +77,5 @@ add_executable(RayCasterTest
 #        RayCaster.cpp
         Transform.cpp
         World.cpp
-        Shape.h Intersection.h Ray.h Computation.h Sphere.cpp Plane.cpp Plane.h)
+        )
 target_link_libraries(RayCasterTest gtest gtest_main Eigen3::Eigen)

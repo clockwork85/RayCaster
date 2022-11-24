@@ -41,6 +41,17 @@ public:
     }
 };
 
+// Color constants
+const Color BLACK(0.0f, 0.0f, 0.0f);
+const Color WHITE(1.0f, 1.0f, 1.0f);
+const Color RED(1.0f, 0.0f, 0.0f);
+const Color GREEN(0.0f, 1.0f, 0.0f);
+const Color BLUE(0.0f, 0.0f, 1.0f);
+const Color YELLOW(1.0f, 1.0f, 0.0f);
+const Color GREY(0.5f, 0.5f, 0.5f);
+
+
+
 
 
 #endif //RAYCASTER_COLOR_H

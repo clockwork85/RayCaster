@@ -104,7 +104,11 @@ Intersection hit(std::vector<Intersection> intersections) {
 }
 
 Color lighting(const Material& material, const PointLight& light, const Vector4f& position, const Vector4f& eye, const Vector4f& normal, const bool in_shadow) {
-    Color effective_color = material.color * light.intensity();
+    Color material_color = material.color;
+    if(material.pattern != nullptr) {
+        material_color = material.pattern->stripe_at(position);
+    }
+    Color effective_color = material_color * light.intensity();
     Vector4f light_vector = (light.position() - position).normalized();
     const float light_dot_normal = light_vector.dot(normal);
     Color ambient = effective_color * material.ambient;

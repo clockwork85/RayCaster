@@ -11,6 +11,7 @@
 #include "Color.h"
 #include "Lights.h"
 #include "Material.h"
+#include "Pattern.h"
 #include "Plane.h"
 #include "RayCaster.h"
 #include "Sphere.h"
@@ -1233,6 +1234,68 @@ TEST(TestPlane, TestARayIntersectingAPlaneFromAbove) {
     EXPECT_TRUE(xs.size() == 1);
     EXPECT_TRUE(xs[0].t == 1);
     EXPECT_TRUE(xs[0].object == &p);
+}
+
+TEST(TestPlane, TestARayIntersectingAPlaneFromBelow) {
+    Plane p = Plane();
+    Ray r = Ray(create_point(0, -1, 0), create_vector(0, 1, 0));
+    std::vector<Intersection> xs = p.intersect(r);
+    EXPECT_TRUE(xs.size() == 1);
+    EXPECT_TRUE(xs[0].t == 1);
+    EXPECT_TRUE(xs[0].object == &p);
+}
+
+TEST(TestPatterns, TestColorConstants) {
+    EXPECT_TRUE(Color(1, 1, 1) == WHITE);
+    EXPECT_TRUE(Color(0, 0, 0) == BLACK);
+    EXPECT_TRUE(Color(0.5, 0.5, 0.5) == GREY);
+    EXPECT_TRUE(Color(1, 0, 0) == RED);
+    EXPECT_TRUE(Color(0, 1, 0) == GREEN);
+    EXPECT_TRUE(Color(0, 0, 1) == BLUE);
+}
+
+TEST(TestPatternns, TestCreate) {
+    const auto p = stripe_pattern(WHITE, BLACK);
+    EXPECT_TRUE(p->a == WHITE);
+    EXPECT_TRUE(p->b == BLACK);
+}
+
+TEST(TestPatterns, TestStripePatternConstantInY) {
+    const auto p = stripe_pattern(WHITE, BLACK);
+    EXPECT_TRUE(p->stripe_at(create_point(0, 0, 0)) == WHITE);
+    EXPECT_TRUE(p->stripe_at(create_point(0, 1, 0)) == WHITE);
+    EXPECT_TRUE(p->stripe_at(create_point(0, 2, 0)) == WHITE);
+}
+
+TEST(TestPatterns, TestStripePatternConstantInZ) {
+    const auto p = stripe_pattern(WHITE, BLACK);
+    EXPECT_TRUE(p->stripe_at(create_point(0, 0, 0)) == WHITE);
+    EXPECT_TRUE(p->stripe_at(create_point(0, 0, 1)) == WHITE);
+    EXPECT_TRUE(p->stripe_at(create_point(0, 0, 2)) == WHITE);
+}
+
+TEST(TestPatterns, TestStripePatternAlternatesInX) {
+    const auto p = stripe_pattern(WHITE, BLACK);
+    EXPECT_TRUE(p->stripe_at(create_point(0, 0, 0)) == WHITE);
+    EXPECT_TRUE(p->stripe_at(create_point(0.9, 0, 0)) == WHITE);
+    EXPECT_TRUE(p->stripe_at(create_point(1, 0, 0)) == BLACK);
+    EXPECT_TRUE(p->stripe_at(create_point(-0.1, 0, 0)) == BLACK);
+    EXPECT_TRUE(p->stripe_at(create_point(-1, 0, 0)) == BLACK);
+    EXPECT_TRUE(p->stripe_at(create_point(-1.1, 0, 0)) == WHITE);
+}
+
+TEST(TestPatterns, TestLightingWithAPatternApplied) {
+    Material m = Material();
+    m.pattern = stripe_pattern(WHITE, BLACK);
+    m.ambient = 1;
+    m.diffuse = 0;
+    m.specular = 0;
+//    Shape* s = new Sphere();
+    PointLight light = PointLight(create_point(0, 0, -10), WHITE);
+    Color c1 = lighting(m, light, create_point(0.9, 0, 0), create_vector(0, 0, -1), create_vector(0, 0, -1), false);
+    Color c2 = lighting(m, light, create_point(1.1, 0, 0), create_vector(0, 0, -1), create_vector(0, 0, -1), false);
+    EXPECT_TRUE(c1 == WHITE);
+    EXPECT_TRUE(c2 == BLACK);
 }
 
 int main(int argc, char **argv) {
