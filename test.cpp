@@ -610,7 +610,7 @@ TEST(TestRayCaster, TestVector3fFromADistance) {
 TEST(TestRayCaster, TestIntersectSphereWithTwoVector3fs) {
     Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
     Sphere s = Sphere();
-    std::vector<Intersection> intersections = intersect(&s, r);
+    std::vector<Intersection> intersections = s.intersect( r);
     EXPECT_EQ(intersections.size(), 2);
     EXPECT_EQ(intersections[0].t, 4.0);
     EXPECT_EQ(intersections[1].t, 6.0);
@@ -619,7 +619,7 @@ TEST(TestRayCaster, TestIntersectSphereWithTwoVector3fs) {
 TEST(TestRayCaster, TestIntersectSphereWithATangent) {
     Ray r = Ray(create_point(0, 1, -5), create_vector(0, 0, 1));
     Sphere s = Sphere();
-    std::vector<Intersection> intersections = intersect(&s, r);
+    std::vector<Intersection> intersections = s.intersect( r);
     EXPECT_EQ(intersections.size(), 2);
     EXPECT_EQ(intersections[0].t, 5.0);
     EXPECT_EQ(intersections[1].t, 5.0);
@@ -628,14 +628,14 @@ TEST(TestRayCaster, TestIntersectSphereWithATangent) {
 TEST(TestRayCaster, TestRayMissesSphere) {
     Ray r = Ray(create_point(0, 2, -5), create_vector(0, 0, 1));
     Sphere s = Sphere();
-    std::vector<Intersection> intersections = intersect(&s, r);
+    std::vector<Intersection> intersections = s.intersect( r);
     EXPECT_EQ(intersections.size(), 0);
 }
 
 TEST(TestRayCaster, TestRayOriginatesInsideASphere) {
     Ray r = Ray(create_point(0, 0, 0), create_vector(0, 0, 1));
     Sphere s = Sphere();
-    std::vector<Intersection> intersections = intersect(&s, r);
+    std::vector<Intersection> intersections = s.intersect( r);
     EXPECT_EQ(intersections.size(), 2);
     EXPECT_EQ(intersections[0].t, -1.0);
     EXPECT_EQ(intersections[1].t, 1.0);
@@ -644,7 +644,7 @@ TEST(TestRayCaster, TestRayOriginatesInsideASphere) {
 TEST(TestRayCaster, TestSphereIsBehindARay){
     Ray r = Ray(create_point(0, 0, 5), create_vector(0, 0, 1));
     Sphere s = Sphere();
-    std::vector<Intersection> intersections = intersect(&s, r);
+    std::vector<Intersection> intersections = s.intersect( r);
     EXPECT_EQ(intersections.size(), 2);
     EXPECT_EQ(intersections[0].t, -6.0);
     EXPECT_EQ(intersections[1].t, -4.0);
@@ -672,7 +672,7 @@ TEST(TestRayCaster, TestAggregateIntersections) {
 TEST(TestRayCaster, TestIntersectSetsTheObjectOnIntersection) {
     Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
     Sphere s = Sphere();
-    std::vector<Intersection> intersections = intersect(&s, r);
+    std::vector<Intersection> intersections = s.intersect( r);
     EXPECT_EQ(intersections.size(), 2);
     EXPECT_EQ(intersections[0].object, &s);
     EXPECT_EQ(intersections[1].object, &s);
@@ -743,7 +743,7 @@ TEST(TestSphereTransforms, TestIntersectingAScaledSphereWithRay) {
     Sphere s = Sphere();
     Matrix4f scale = Transform::scale(2, 2, 2);
     s.set_transform(scale   );
-    std::vector<Intersection> intersections = intersect(&s, r);
+    std::vector<Intersection> intersections = s.intersect( r);
     EXPECT_EQ(intersections.size(), 2);
     EXPECT_EQ(intersections[0].t, 3);
     EXPECT_EQ(intersections[1].t, 7);
@@ -754,7 +754,7 @@ TEST(TestSphereTransforms, TestIntersectingATranslatedSphereWithRay) {
     Sphere s = Sphere();
     Matrix4f translation = Transform::translate(5, 0, 0);
     s.set_transform(translation);
-    std::vector<Intersection> intersections = intersect(&s, r);
+    std::vector<Intersection> intersections = s.intersect( r);
     EXPECT_EQ(intersections.size(), 0);
 }
 

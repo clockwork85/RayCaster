@@ -24,36 +24,36 @@ using Vector4f = Eigen::Vector4f;
 using Matrix4f = Eigen::Matrix4f;
 
 
-std::vector<Intersection> intersect(const Sphere* sphere, const Ray& ray) {
-    std::vector<Intersection> intersections;
-    Ray ray_local = ray.transform_ray(sphere->inverse());
-    Vector4f sphere_to_ray = ray_local.origin - create_point(0.0f, 0.0f, 0.0f);
-    float a = ray_local.direction.dot(ray_local.direction);
-    float b = 2 * ray_local.direction.dot(sphere_to_ray);
-    float c = sphere_to_ray.dot(sphere_to_ray) - 1.0f;
-    float discriminant = (b * b) - (4 * a * c);
-    if (discriminant < 0) {
-        return intersections;
-    }
-    float t1 = (-b - sqrt(discriminant)) / (2.0f * a);
-    float t2 = (-b + sqrt(discriminant)) / (2.0f * a);
-    intersections.push_back(Intersection(t1, sphere));
-    intersections.push_back(Intersection(t2, sphere));
-    return intersections;
-}
+//std::vector<Intersection> intersect(const Sphere* sphere, const Ray& ray) {
+//    std::vector<Intersection> intersections;
+//    Ray ray_local = ray.transform_ray(sphere->inverse());
+//    Vector4f sphere_to_ray = ray_local.origin - create_point(0.0f, 0.0f, 0.0f);
+//    float a = ray_local.direction.dot(ray_local.direction);
+//    float b = 2 * ray_local.direction.dot(sphere_to_ray);
+//    float c = sphere_to_ray.dot(sphere_to_ray) - 1.0f;
+//    float discriminant = (b * b) - (4 * a * c);
+//    if (discriminant < 0) {
+//        return intersections;
+//    }
+//    float t1 = (-b - sqrt(discriminant)) / (2.0f * a);
+//    float t2 = (-b + sqrt(discriminant)) / (2.0f * a);
+//    intersections.push_back(Intersection(t1, sphere));
+//    intersections.push_back(Intersection(t2, sphere));
+//    return intersections;
+//}
 
 std::vector<Intersection> intersect_world(const World& world, const Ray& ray) {
-    std::vector<Intersection> intersections;
+    std::vector<Intersection> totintersections;
     for (const Sphere& sphere : world.objects) {
-        std::vector<Intersection> sphere_intersections = intersect(&sphere, ray);
+        std::vector<Intersection> intersections = sphere.intersect(ray);
         // Put all intersections into one vector
-        for ( const Intersection& intersection : sphere_intersections) {
-            intersections.emplace_back(intersection);
+        for ( const Intersection& intersection : intersections) {
+            totintersections.push_back(intersection);
         }
     }
 
     // Sort intersections by t
-    std::sort(intersections.begin(), intersections.end(), [](const Intersection& a, const Intersection& b) {
+    std::sort(totintersections.begin(), totintersections.end(), [](const Intersection& a, const Intersection& b) {
         return a.t < b.t;
     });
 
@@ -62,7 +62,7 @@ std::vector<Intersection> intersect_world(const World& world, const Ray& ray) {
 //        std::cout << "Intersection: " << intersection.t << std::endl;
 //    }
 
-    return intersections;
+    return totintersections;
 }
 
 Vector4f normal_at(const Sphere* sphere, const Vector4f& world_point) {
