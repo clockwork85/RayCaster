@@ -194,7 +194,7 @@ Color color_at(const World& world, const Ray& ray) {
 //    return shade_hit(world, comps);
 }
 
-Ray ray_for_pixel(Camera camera, int px, int py) {
+Ray ray_for_pixel(const Camera& camera, const int px, const int py) {
     float xoffset = (px + 0.5f) * camera.pixel_size;
     float yoffset = (py + 0.5f) * camera.pixel_size;
     float world_x = camera.half_width - xoffset;
@@ -205,7 +205,7 @@ Ray ray_for_pixel(Camera camera, int px, int py) {
     return Ray(origin, direction);
 }
 
-Canvas render(Camera camera, World world) {
+Canvas render(const Camera& camera, const World& world) {
     Canvas image = Canvas(camera.hsize, camera.vsize);
     for (int y = 0; y < camera.vsize; y++) {
         for (int x = 0; x < camera.hsize; x++) {

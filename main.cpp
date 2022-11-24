@@ -14,22 +14,22 @@ using Matrix4f = Eigen::Matrix4f;
 
 int main() {
 
-    Plane floor = Plane();
+    auto floor = Plane();
     floor.material.color = Color(1.0f, 0.9f, 0.9f);
 
-    Sphere middle = Sphere();
+    auto middle = Sphere();
     middle.material.color = Color(0.1f, 1.0f, 0.5f);
     middle.material.diffuse = 0.7f;
     middle.material.specular = 0.3f;
     middle.set_transform(Transform::translate(-0.5f, 1.0f, 0.5f));
 
-    Sphere right = Sphere();
+    auto right = Sphere();
     right.material.color = Color(0.5f, 1.0f, 0.1f);
     right.material.diffuse = 0.7f;
     right.material.specular = 0.3f;
     right.set_transform(Transform::translate(1.5f, 0.5f, -0.5f) * Transform::scale(0.5f, 0.5f, 0.5f));
 
-    Sphere left = Sphere();
+    auto left = Sphere();
     left.material.color = Color(1.0f, 0.8f, 0.1f);
     left.material.diffuse = 0.7f;
     left.material.specular = 0.3f;
@@ -48,7 +48,7 @@ int main() {
     camera.transform = Transform::view_transform(create_point(0.0f, 1.5f, -5.0f), create_point(0.0f, 1.0f, 0.0f), create_vector(0.0f, 1.0f, 0.0f));
 
     Canvas canvas = render(camera, world);
-    canvas.save_to_file("testa.ppm");
+    canvas.save_to_file("testv.ppm");
 
     return 0;
 }

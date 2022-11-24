@@ -923,15 +923,15 @@ TEST(TestWorld, TestTheDefaultWorld) {
     EXPECT_TRUE(w.lights.size() == 1);
     EXPECT_TRUE(w.lights[0] == PointLight(create_point(-10, 10, -10), Color(1, 1, 1)));
     EXPECT_TRUE(w.objects.size() == 2);
-    EXPECT_TRUE(w.objects[0].material.color == Color(0.8, 1.0, 0.6));
-    EXPECT_FLOAT_EQ(w.objects[0].material.diffuse, 0.7);
-    EXPECT_FLOAT_EQ(w.objects[0].material.specular, 0.2);
-    EXPECT_TRUE(w.objects[1].material.color == Color(1.0, 1.0, 1.0));
-    EXPECT_FLOAT_EQ(w.objects[1].material.ambient, 0.1);
-    EXPECT_FLOAT_EQ(w.objects[1].material.diffuse, 0.9);
-    EXPECT_FLOAT_EQ(w.objects[1].material.specular, 0.9);
-    EXPECT_FLOAT_EQ(w.objects[1].material.shininess, 200.0);
-    EXPECT_TRUE(w.objects[1].matrix() == Transform::scale(0.5, 0.5, 0.5).matrix());
+    EXPECT_TRUE(w.objects[0]->material.color == Color(0.8, 1.0, 0.6));
+    EXPECT_FLOAT_EQ(w.objects[0]->material.diffuse, 0.7);
+    EXPECT_FLOAT_EQ(w.objects[0]->material.specular, 0.2);
+    EXPECT_TRUE(w.objects[1]->material.color == Color(1.0, 1.0, 1.0));
+    EXPECT_FLOAT_EQ(w.objects[1]->material.ambient, 0.1);
+    EXPECT_FLOAT_EQ(w.objects[1]->material.diffuse, 0.9);
+    EXPECT_FLOAT_EQ(w.objects[1]->material.specular, 0.9);
+    EXPECT_FLOAT_EQ(w.objects[1]->material.shininess, 200.0);
+    EXPECT_TRUE(w.objects[1]->matrix() == Transform::scale(0.5, 0.5, 0.5).matrix());
 }
 
 TEST(TestWorld, TestIntersectWorldWithARay) {
@@ -948,8 +948,8 @@ TEST(TestWorld, TestIntersectWorldWithARay) {
 TEST(TestWorld, TestPrecomputeStateOfIntersection) {
     World w = default_world();
     Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
-    Sphere shape = w.objects[0];
-    Intersection i = Intersection(4, &shape);
+    const auto shape = w.objects.at(0).get();
+    Intersection i = Intersection(4, shape);
     Computation comps = prepare_computations(i, r);
     EXPECT_TRUE(comps.t == i.t);
     EXPECT_TRUE(comps.object == i.object);
@@ -961,8 +961,8 @@ TEST(TestWorld, TestPrecomputeStateOfIntersection) {
 TEST(TestWorld, TestIntersectionOccursOnTheOutside) {
     World w = default_world();
     Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
-    Sphere shape = w.objects[0];
-    Intersection i = Intersection(4, &shape);
+    const auto shape = w.objects.at(0).get();
+    Intersection i = Intersection(4, shape);
     Computation comps = prepare_computations(i, r);
     EXPECT_FALSE(comps.inside);
 }
@@ -970,8 +970,8 @@ TEST(TestWorld, TestIntersectionOccursOnTheOutside) {
 TEST(TestWorld, TestIntersectionOccursOnTheInside) {
     World w = default_world();
     Ray r = Ray(create_point(0, 0, 0), create_vector(0, 0, 1));
-    Sphere shape = w.objects[0];
-    Intersection i = Intersection(1, &shape);
+    const auto shape = w.objects.at(0).get();
+    Intersection i = Intersection(1, shape);
     Computation comps = prepare_computations(i, r);
     EXPECT_TRUE(comps.point == create_point(0, 0, 1));
     EXPECT_TRUE(comps.eyev == create_vector(0, 0, -1));
@@ -982,8 +982,8 @@ TEST(TestWorld, TestIntersectionOccursOnTheInside) {
 TEST(TestWorld, TestShadingAnIntersection) {
     World w = default_world();
     Ray r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
-    Sphere shape = w.objects[0];
-    Intersection i = Intersection(4, &shape);
+    const auto shape = w.objects.at(0).get();
+    Intersection i = Intersection(4, shape);
     Computation comps = prepare_computations(i, r);
 //    std::cout << "Test shading an intersection: " << std::endl;
     Color c = shade_hit(w, comps);
@@ -996,11 +996,11 @@ TEST(TestWorld, TestShadingIntersectionFromInside) {
     w.lights.clear();
     w.lights.push_back(PointLight(create_point(0, 0.25, 0), Color(1, 1, 1)));
     Ray r = Ray(create_point(0, 0, 0), create_vector(0, 0, 1));
-    Sphere shape = w.objects[1];
-    Intersection i = Intersection(0.5, &shape);
+    const auto shape = w.objects.at(1).get();
+    Intersection i = Intersection(0.5, shape);
     Computation comps = prepare_computations(i, r);
 //    Color c = shade_hit(w, comps);
-    Color c = lighting(shape.material, w.lights[0], comps.point, comps.eyev, comps.normalv, false);
+    Color c = lighting(shape->material, w.lights[0], comps.point, comps.eyev, comps.normalv, false);
     EXPECT_TRUE(c == Color(0.90498, 0.90498, 0.90498));
 }
 
@@ -1020,11 +1020,11 @@ TEST(TestWorld, TestColorWhenARayHits) {
 
 TEST(TestWorld, TestColorWithAnIntersectionBehindTheRay) {
     World w = default_world();
-    w.objects[0].material.ambient = 1;
-    w.objects[1].material.ambient = 1;
+    w.objects[0]->material.ambient = 1;
+    w.objects[1]->material.ambient = 1;
     Ray r = Ray(create_point(0, 0, 0.75), create_vector(0, 0, -1));
     Color c = color_at(w, r);
-    EXPECT_TRUE(c == w.objects[1].material.color);
+    EXPECT_TRUE(c == w.objects.at(1).get()->material.color);
 }
 
 TEST(TestWorld, TestViewTransformTransformationMatrixForDefaultOrientation) {
@@ -1128,13 +1128,13 @@ TEST(TestShadows, TestShadeHitIsGivenAnIntersectionInShadow) {
     World w = default_world();
     w.lights.clear();
     w.lights.push_back(PointLight(create_point(0, 0, -10), Color(1, 1, 1)));
-    Sphere s1 = Sphere();
-    w.objects.push_back(s1);
-    Sphere s2 = Sphere();
+    const auto s1 = Sphere();
+    w.add_object(s1);
+    auto s2 = Sphere();
     s2.set_transform(Transform::translate(0, 0, 10));
-    w.objects.push_back(s2);
+    w.add_object(s2);
     Ray r = Ray(create_point(0, 0, 5), create_vector(0, 0, 1));
-    Intersection i = Intersection(4, &w.objects[1]);
+    Intersection i = Intersection(4, w.objects.at(1).get());
     Computation comps = prepare_computations(i, r);
     Color c = shade_hit(w, comps);
     EXPECT_TRUE(c == Color(0.1, 0.1, 0.1));

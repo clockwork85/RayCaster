@@ -13,11 +13,8 @@
 
 class World {
 public:
-    // Empty world contains no objects or lights
-    World() : objects(), lights() {}
-
 //    std::vector<Shape> objects{};
-    std::vector<std::shared_ptr<Shape>> objects{};
+    std::vector<std::unique_ptr<Shape>> objects{};
     std::vector<PointLight> lights{};
 
     template<class ShapeType>
