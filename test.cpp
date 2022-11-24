@@ -761,37 +761,37 @@ TEST(TestSphereTransforms, TestIntersectingATranslatedSphereWithRay) {
 }
 
 TEST(TestLighting, TestNormalOnASphereAtAPointOnTheXAxis) {
-    Sphere s = Sphere();
+    const auto s = Sphere();
     Vector4f world_point = create_point(1, 0, 0);
-    Vector4f normal = normal_at(&s, world_point);
+    Vector4f normal = s.normal_at(world_point);
     EXPECT_EQ(normal, create_vector(1, 0, 0));
 }
 
 TEST(TestLighting, TestNormalOnASphereAtPointOnTheYAxis) {
-    Sphere s = Sphere();
+    const Sphere s = Sphere();
     Vector4f world_point = create_point(0, 1, 0);
-    Vector4f normal = normal_at(&s, world_point);
+    Vector4f normal = s.normal_at(world_point);
     EXPECT_EQ(normal, create_vector(0, 1, 0));
 }
 
 TEST(TestLighting, TestNormalOnASphereAtAPointOnTheZAxis) {
     Sphere s = Sphere();
     Vector4f world_point = create_point(0, 0, 1);
-    Vector4f normal = normal_at(&s, world_point);
+    Vector4f normal = s.normal_at(world_point);
     EXPECT_EQ(normal, create_vector(0, 0, 1));
 }
 
 TEST(TestLighting, TestNormalOnASphereAtAPointOnNonAxialPoint) {
     Sphere s = Sphere();
     Vector4f world_point = create_point(sqrt(3)/3, sqrt(3)/3, sqrt(3)/3);
-    Vector4f normal = normal_at(&s, world_point);
+    Vector4f normal = s.normal_at(world_point);
     EXPECT_TRUE(normal.isApprox(create_vector(sqrt(3)/3, sqrt(3)/3, sqrt(3)/3)));
 }
 
 TEST(TestLighting, TestNormalIsANormalizedVector) {
     Sphere s = Sphere();
     Vector4f world_point = create_point(sqrt(3)/3, sqrt(3)/3, sqrt(3)/3);
-    Vector4f normal = normal_at(&s, world_point);
+    Vector4f normal = s.normal_at(world_point);
     EXPECT_TRUE(normal.isApprox(normal.normalized()));
 }
 
@@ -800,7 +800,7 @@ TEST(TestLighting, TestComputingTheNormalOnATranslatedSphere) {
     Matrix4f translation = Transform::translate(0, 1, 0);
     s.set_transform(translation);
     Vector4f world_point = create_point(0, 1.70711, -0.70711);
-    Vector4f normal = normal_at(&s, world_point);
+    Vector4f normal = s.normal_at(world_point);
     EXPECT_TRUE(normal.isApprox(create_vector(0, 0.70711, -0.70711)));
 }
 
@@ -812,7 +812,7 @@ TEST(TestLighting, TestComputingTheNormalOnATransformedSphere) {
             .matrix();
     s.set_transform(t);
     Vector4f world_point = create_point(0, sqrt(2)/2, -sqrt(2)/2);
-    Vector4f normal = normal_at(&s, world_point);
+    Vector4f normal = s.normal_at(world_point);
     EXPECT_TRUE(normal.isApprox(create_vector(0, 0.97014, -0.24254)));
 }
 

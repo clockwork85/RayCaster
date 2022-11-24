@@ -44,6 +44,7 @@ add_executable(RayCaster
         Canvas.cpp
         Transform.cpp
         Sphere.cpp
+        RayCaster.cpp
         )
 target_link_libraries(RayCaster Eigen3::Eigen)
 
@@ -74,7 +75,7 @@ add_executable(RayCasterTest
 #        Color.cpp
 #        Lights.cpp
         MathUtils.cpp
-#        RayCaster.cpp
+        RayCaster.cpp
         Transform.cpp
         World.cpp
         )
