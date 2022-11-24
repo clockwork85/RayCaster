@@ -8,6 +8,7 @@
 #include <vector>
 #include "Lights.h"
 #include "Sphere.h"
+#include "Transform.h"
 
 class World {
 public:

@@ -6,11 +6,13 @@
 #define RAYCASTER_INTERSECTION_H
 
 #include "MathUtils.h"
-#include "Sphere.h"
+#include "Shape.h"
+
+struct Shape;
 
 struct Intersection {
-    Intersection() = delete;
-    Intersection(float _t, const Sphere* _object) : t(_t), object(_object) {}
+    Intersection() : t(-1), object(nullptr) {}
+    Intersection(float _t, const Shape* _object) : t(_t), object(_object) {}
 
     inline bool operator==(const Intersection& other) const {
         if (!(is_equal(t, other.t))) {
@@ -20,6 +22,6 @@ struct Intersection {
     }
 
     float t;
-    const Sphere* object;
+    const Shape* object;
 };
 #endif //RAYCASTER_INTERSECTION_H

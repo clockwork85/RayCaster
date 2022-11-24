@@ -77,7 +77,7 @@ Vector4f reflect(const Vector4f& in, const Vector4f& normal) {
     return in - (normal * 2 * in.dot(normal));
 }
 
-std::optional<Intersection> hit(std::vector<Intersection> intersections) {
+Intersection hit(std::vector<Intersection> intersections) {
 //    for (Intersection intersection : intersections) {
 //        if (intersection.t > 0 && (intersection.t < closest.t || closest.t == 0)) {
 //            closest = intersection;
@@ -87,19 +87,26 @@ std::optional<Intersection> hit(std::vector<Intersection> intersections) {
     std::sort(intersections.begin(), intersections.end(), [](const Intersection& a, const Intersection& b) {
         return a.t < b.t;
     });
-
-    for (Intersection intersection : intersections) {
-        if (intersection.t >= 0) {
-            return {intersection};
+    // Print out all intersections
+    for (const Intersection& intersection : intersections) {
+        if (intersection.t > 0) {
+            return intersection;
         }
     }
-    return {};
+
+//    for (Intersection intersection : intersections) {
+//        if (intersection.t >= 0) {
+//            return {intersection};
+//        }
+//    }
+//    std::cout << "No hit" << std::endl;
+    return Intersection();
 }
 
 Color lighting(const Material& material, const PointLight& light, const Vector4f& position, const Vector4f& eye, const Vector4f& normal, const bool in_shadow) {
     Color effective_color = material.color * light.intensity();
     Vector4f light_vector = (light.position() - position).normalized();
-    float light_dot_normal = light_vector.dot(normal);
+    const float light_dot_normal = light_vector.dot(normal);
     Color ambient = effective_color * material.ambient;
     Color diffuse;
     Color specular;
@@ -118,54 +125,54 @@ Color lighting(const Material& material, const PointLight& light, const Vector4f
             specular = light.intensity() * material.specular * factor;
         }
     }
+//    std::cout << "Ambient: " << ambient << std::endl;
+//    std::cout << "Diffuse: " << diffuse << std::endl;
+//    std::cout << "Specular: " << specular << std::endl;
     return ambient + diffuse + specular;
 }
 
 
-bool is_shadowed(const World& world, const Vector4f& point) {
-    Vector4f v = world.lights[0].position() - point;
-    float distance = v.norm();
-    Vector4f direction = v.normalized();
-    Ray r = Ray(point, direction);
-    std::vector<Intersection> intersections = intersect_world(world, r);
-    // print out all intersections
-//    for (Intersection i : intersections) {
-//        std::cout << "Intersection: " << i.t << std::endl;
-//    }
+bool is_shadowed(const World& world, const Vector4f& light_position, const Vector4f& point) {
+//    std::cout << "Point: " << point << std::endl;
+    const Vector4f v = light_position - point;
+//    std::cout << "v: " << v << std::endl;
+    const float distance = v.norm();
+    const Vector4f direction = v.normalized();
+    const Ray r = Ray(point, direction);
+    const std::vector<Intersection> intersections = intersect_world(world, r);
     const auto h = hit(intersections);
-//    if (h.object != nullptr && h.t < distance) {
-//        return true;
-//    }
-//    return false;
-    return h.has_value() && h.value().t < distance;
+//    std::cout << "Hit: " << h.t << std::endl;
+//    std::cout << "Object is nullptr: " << (h.object == nullptr) << std::endl;
+//    std::cout << "Distance: " << distance << std::endl;
+
+    return (h.t > 0) && (h.t < distance);
 }
 
 
 Computation prepare_computations(const Intersection& intersection, const Ray& ray) {
-    Vector4f point = ray.position(intersection.t);
-    Vector4f eye = -ray.direction;
-    Vector4f normal = normal_at(intersection.object, point);
-    bool inside = false;
-    if (normal.dot(eye) < 0) {
-        inside = true;
-        normal = -normal;
-    }
-    Vector4f over_point = point + normal * EPSILON;
     Computation comps;
     comps.t = intersection.t;
+    comps.point = ray.position(comps.t);
     comps.object = intersection.object;
-    comps.point = point;
-    comps.eyev = eye;
-    comps.normalv = normal;
-    comps.inside = inside;
-    comps.over_point = over_point;
+    comps.eyev = -ray.direction;
+    comps.normalv = comps.object->normal_at(comps.point);
+    if (comps.normalv.dot(comps.eyev) < 0) {
+        comps.inside = true;
+        comps.normalv = -comps.normalv;
+    } else {
+        comps.inside = false;
+    }
+    comps.over_point = comps.point + comps.normalv * EPSILON;
     return comps;
 }
 
 Color shade_hit(const World& world, const Computation& comps) {
     Color surface = Color(0.0f, 0.0f, 0.0f);
-    Vector4f point = comps.over_point;
-    bool shadowed = is_shadowed(world, point);
+    bool shadowed = is_shadowed(world, world.lights[0].position(), comps.over_point);
+//    std::cout << "Shadowed: " << shadowed << std::endl;
+//    std::cout << "Point: " << comps.point << std::endl;
+//    std::cout << "Over point: " << comps.over_point << std::endl;
+
 //    for (PointLight& light : world.lights) {
     surface = surface + lighting(comps.object->material, world.lights[0], comps.point, comps.eyev, comps.normalv, shadowed);
  //   }
@@ -175,10 +182,10 @@ Color shade_hit(const World& world, const Computation& comps) {
 Color color_at(const World& world, const Ray& ray) {
     std::vector<Intersection> intersections = intersect_world(world, ray);
     const auto intersection = hit(intersections);
-    if(!intersection.has_value()) {
+    if(intersection.object == nullptr)  {
         return Color(0.0f, 0.0f, 0.0f);
     }
-    const auto comps = prepare_computations(intersection.value(), ray);
+    const auto comps = prepare_computations(intersection, ray);
     return shade_hit(world, comps);
 //    if (intersection.t == 0) {
 //        return Color(0.0f, 0.0f, 0.0f);

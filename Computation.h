@@ -7,13 +7,13 @@
 
 #include <Eigen/Core>
 #include "MathUtils.h"
-#include "Sphere.h"
+#include "Shape.h"
 
 using Vector4f = Eigen::Vector4f;
 
 struct Computation {
         float t{-1 };
-        const Sphere* object{nullptr};
+        const Shape* object{nullptr};
         Vector4f point{0, 0, 0, 1};
         Vector4f eyev{0, 0, 0, 0};
         Vector4f normalv{0, 0, 0, 0};

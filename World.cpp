@@ -13,7 +13,7 @@ World default_world() {
     world.add_object(s1);
     Sphere s2 = Sphere();
     Matrix4f scale = Transform::scale(0.5, 0.5, 0.5);
-    s2.transform(scale);
+    s2.set_transform(scale);
     world.add_object(s2);
     world.add_light(PointLight(create_point(-10, 10, -10), Color(1, 1, 1)));
     return world;
