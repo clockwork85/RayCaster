@@ -45,10 +45,10 @@ Intersection hit(std::vector<Intersection> intersections) {
     return Intersection();
 }
 
-Color lighting(const Material& material, const PointLight& light, const Vector4f& position, const Vector4f& eye, const Vector4f& normal, const bool in_shadow) {
+Color lighting(const Material& material, const Shape* shape, const PointLight& light, const Vector4f& position, const Vector4f& eye, const Vector4f& normal, const bool in_shadow) {
     Color material_color = material.color;
     if(material.pattern != nullptr) {
-        material_color = material.pattern->stripe_at(position);
+        material_color = pattern_at_object(material.pattern, shape, position);
     }
     Color effective_color = material_color * light.intensity();
     Vector4f light_vector = (light.position() - position).normalized();
@@ -113,7 +113,7 @@ Color shade_hit(const World& world, const Computation& comps) {
 //    std::cout << "Over point: " << comps.over_point << std::endl;
 
 //    for (PointLight& light : world.lights) {
-    surface = surface + lighting(comps.object->material, world.lights[0], comps.point, comps.eyev, comps.normalv, shadowed);
+    surface = surface + lighting(comps.object->material, comps.object, world.lights[0], comps.point, comps.eyev, comps.normalv, shadowed);
     //   }
     return surface;
 }

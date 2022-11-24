@@ -15,9 +15,11 @@ using Matrix4f = Eigen::Matrix4f;
 int main() {
 
     auto floor = Plane();
+    floor.material.pattern = stripe_pattern(WHITE, BLACK);
     floor.material.color = Color(1.0f, 0.9f, 0.9f);
 
     auto middle = Sphere();
+    middle.material.pattern = stripe_pattern(RED, GREEN);
     middle.material.color = Color(0.1f, 1.0f, 0.5f);
     middle.material.diffuse = 0.7f;
     middle.material.specular = 0.3f;

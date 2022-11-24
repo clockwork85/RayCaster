@@ -46,7 +46,7 @@ std::vector<Intersection> intersect_world(const World& world, const Ray& ray);
 Vector4f normal_at(const Sphere* sphere, const Vector4f& world_point);
 Vector4f reflect(const Vector4f& in, const Vector4f& normal);
 Intersection hit(std::vector<Intersection> intersections);
-Color lighting(const Material& material, const PointLight& light, const Vector4f& position, const Vector4f& eye, const Vector4f& normal, const bool in_shadow);
+Color lighting(const Material& material, const Shape* shape, const PointLight& light, const Vector4f& position, const Vector4f& eye, const Vector4f& normal, const bool in_shadow);
 bool is_shadowed(const World& world, const Vector4f& light_position, const Vector4f& point);
 Computation prepare_computations(const Intersection& intersection, const Ray& ray);
 Color shade_hit(const World& world, const Computation& comps);

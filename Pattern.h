@@ -7,6 +7,8 @@
 
 #include "Color.h"
 
+using Matrix4f = Eigen::Matrix4f;
+
 struct Pattern {
     Pattern(const Color a, const Color b) : a(a), b(b) {}
 
@@ -18,8 +20,24 @@ struct Pattern {
         }
     }
 
+    Matrix4f matrix() const {
+        return m_transform;
+    }
+
+    Matrix4f inverse() const {
+        return m_inverse;
+    }
+
+    void set_transform(const Matrix4f& transform) {
+        m_transform = m_transform * transform;
+        m_inverse = m_transform.inverse();
+    }
+
     const Color a;
     const Color b;
+private:
+    Matrix4f m_transform = Matrix4f::Identity();
+    Matrix4f m_inverse = m_transform.inverse();
 };
 
 inline std::shared_ptr<Pattern> stripe_pattern(const Color a, const Color b) {
