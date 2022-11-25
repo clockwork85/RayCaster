@@ -17,6 +17,7 @@ struct Computation {
         Vector4f point{0, 0, 0, 1};
         Vector4f eyev{0, 0, 0, 0};
         Vector4f normalv{0, 0, 0, 0};
+        Vector4f reflectv{0, 0, 0, 0};
         bool inside{false};
         Vector4f over_point{point + normalv * EPSILON};
 };

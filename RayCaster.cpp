@@ -21,14 +21,6 @@ std::vector<Intersection> intersect_world(const World& world, const Ray& ray) {
     return totintersections;
 }
 
-//Vector4f normal_at(const Sphere* sphere, const Vector4f& world_point) {
-//    Vector4f object_point = sphere->inverse() * world_point;
-//    Vector4f object_normal = object_point - create_point(0.0f, 0.0f, 0.0f);
-//    Vector4f world_normal = sphere->inverse().transpose() * object_normal;
-//    world_normal(3) = 0.0f;
-//    return world_normal.normalized();
-//}
-
 Vector4f reflect(const Vector4f& in, const Vector4f& normal) {
     return in - (normal * 2 * in.dot(normal));
 }
@@ -101,11 +93,12 @@ Computation prepare_computations(const Intersection& intersection, const Ray& ra
     } else {
         comps.inside = false;
     }
+    comps.reflectv = reflect(ray.direction, comps.normalv);
     comps.over_point = comps.point + comps.normalv * EPSILON;
     return comps;
 }
 
-Color shade_hit(const World& world, const Computation& comps) {
+Color shade_hit(const World& world, const Computation& comps, const int remaining) {
     // Color surface = Color(0.0f, 0.0f, 0.0f);
     bool shadowed = is_shadowed(world, world.lights[0].position(), comps.over_point);
 //    std::cout << "Shadowed: " << shadowed << std::endl;
@@ -113,19 +106,32 @@ Color shade_hit(const World& world, const Computation& comps) {
 //    std::cout << "Over point: " << comps.over_point << std::endl;
 
 //    for (PointLight& light : world.lights) {
-    Color surface =  lighting(comps.object->material, comps.object, world.lights[0], comps.point, comps.eyev, comps.normalv, shadowed);
+    Color surface =  lighting(comps.object->material, comps.object, world.lights[0], comps.over_point, comps.eyev, comps.normalv, shadowed);
     //   }
-    return surface;
+    Color reflected = reflected_color(world, comps, remaining);
+    return surface + reflected;
 }
 
-Color color_at(const World& world, const Ray& ray) {
+Color color_at(const World& world, const Ray& ray, const int remaining) {
     std::vector<Intersection> intersections = intersect_world(world, ray);
     const auto intersection = hit(intersections);
     if(intersection.object == nullptr)  {
         return Color(0.0f, 0.0f, 0.0f);
     }
     const auto comps = prepare_computations(intersection, ray);
-    return shade_hit(world, comps);
+    return shade_hit(world, comps, remaining);
+}
+
+Color reflected_color(const World& world, const Computation& comps, const int remaining) {
+    if (remaining <= 0) {
+        return Color(0.0f, 0.0f, 0.0f);
+    }
+    if (comps.object->material.reflective == 0.0f) {
+        return BLACK;
+    }
+    Ray reflect_ray {comps.over_point, comps.reflectv};
+    Color color = color_at(world, reflect_ray, remaining - 1);
+    return color * comps.object->material.reflective;
 }
 
 Ray ray_for_pixel(const Camera& camera, const int px, const int py) {

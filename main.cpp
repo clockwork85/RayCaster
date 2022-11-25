@@ -16,9 +16,11 @@ using Matrix4f = Eigen::Matrix4f;
 int main() {
 
     auto floor = Plane();
-    floor.material.pattern = stripe_pattern(WHITE, BLACK);
-    floor.material.pattern->set_transform(Transform::scale(3, 3, 3));
+//    floor.material.color = Color(1, 0.9, 0.9);
+    floor.material.pattern = checker_pattern(WHITE, BLACK);
+    floor.material.pattern->set_transform(Transform::scale(1, 1, 1));
     floor.material.pattern->set_transform(Transform::rotate_y(-M_PI_2));
+    floor.material.reflective = 0.5;
 
     auto middle = Sphere();
     middle.material.pattern = stripe_pattern(RED, GREEN);
@@ -27,6 +29,7 @@ int main() {
     middle.material.color = Color(0.1f, 1.0f, 0.5f);
     middle.material.diffuse = 0.7f;
     middle.material.specular = 0.3f;
+    middle.material.reflective = 0.1;
     middle.set_transform(Transform::translate(-0.5f, 1.0f, 0.5f));
 
     auto right = Sphere();
@@ -36,14 +39,16 @@ int main() {
     right.material.color = Color(0.5f, 1.0f, 0.1f);
     right.material.diffuse = 0.7f;
     right.material.specular = 0.3f;
+    right.material.reflective = 0.75;
     right.set_transform(Transform::translate(1.5f, 0.5f, -0.5f) * Transform::scale(0.5f, 0.5f, 0.5f));
 
     auto left = Sphere();
-    left.material.pattern = ring_pattern(GREEN, BLUE);
-    left.material.pattern->set_transform(Transform::scale(0.1, 0.1, 0.1));
-    left.material.color = Color(1.0f, 0.8f, 0.1f);
+//    left.material.pattern = ring_pattern(GREEN, BLUE);
+//    left.material.pattern->set_transform(Transform::scale(0.2, 0.2, 0.2));
+    left.material.color = Color(0.1647f, 0.0039f, 0.2039f);
     left.material.diffuse = 0.7f;
-    left.material.specular = 0.3f;
+    left.material.specular = 0.9f;
+    left.material.reflective = 0.50;
     left.set_transform(Transform::translate(-1.5f, 0.33f, -0.75f) * Transform::scale(0.33f, 0.33f, 0.33f));
 
     World world;
@@ -59,7 +64,7 @@ int main() {
     camera.transform = Transform::view_transform(create_point(0.0f, 1.5f, -5.0f), create_point(0.0f, 1.0f, 0.0f), create_vector(0.0f, 1.0f, 0.0f));
 
     Canvas canvas = render(camera, world);
-    canvas.save_to_file("testv.ppm");
+    canvas.save_to_file("test.ppm");
 
     return 0;
 }

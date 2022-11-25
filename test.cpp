@@ -1356,6 +1356,85 @@ TEST(TestPatterns, TestCheckerBoardPatternRepeatsInZ) {
     EXPECT_TRUE(pattern->pattern_at(create_point(0, 0, 1.01)) == BLACK);
 }
 
+TEST(TestReflection, TestReflectivityforDefaultMaterial) {
+    const auto m = Material();
+    EXPECT_TRUE(m.reflective == 0);
+}
+
+TEST(TestReflection, TestPrecomputingReflectionVector) {
+    const auto shape = Plane();
+    const auto r = Ray(create_point(0, 1, -1), create_vector(0, -sqrt(2) / 2, sqrt(2) / 2));
+    const auto i = Intersection(sqrt(2), &shape);
+    const auto comps = prepare_computations(i, r);
+    EXPECT_TRUE(comps.reflectv == create_vector(0, sqrt(2) / 2, sqrt(2) / 2));
+}
+
+TEST(TestReflection, TestReflectedColorForANonreflectiveMaterial) {
+    const auto w = default_world();
+    const auto r = Ray(create_point(0, 0, 0), create_vector(0, 0, 1));
+    const auto s = w.objects.at(1).get();
+    const auto i = Intersection(1, s);
+    const auto comps = prepare_computations(i, r);
+    const auto color = reflected_color(w, comps);
+    EXPECT_TRUE(color == BLACK);
+}
+
+TEST(TestReflection, TestReflectedColorForAReflectiveMaterial) {
+    auto w = default_world();
+    Plane plane;
+    plane.material.reflective = 0.5;
+    plane.set_transform(Transform::translate(0, -1, 0));
+    w.objects.emplace_back(std::make_unique<Plane>(plane));
+    const auto r = Ray(create_point(0, 0, -3), create_vector(0, -sqrt(2) / 2, sqrt(2) / 2));
+    const auto i = Intersection(sqrt(2), w.objects.at(2).get());
+    const auto comps = prepare_computations(i, r);
+    const auto color = reflected_color(w, comps);
+    EXPECT_TRUE(color == Color(0.19032, 0.2379, 0.14274));
+}
+
+TEST(TestReflection, TestShadeHitWithAReflectiveMaterial) {
+    auto w = default_world();
+    Plane plane;
+    plane.material.reflective = 0.5;
+    plane.set_transform(Transform::translate(0, -1, 0));
+    w.objects.emplace_back(std::make_unique<Plane>(plane));
+    const auto r = Ray(create_point(0, 0, -3), create_vector(0, -sqrt(2) / 2, sqrt(2) / 2));
+    const auto i = Intersection(sqrt(2), w.objects.at(2).get());
+    const auto comps = prepare_computations(i, r);
+    const auto color = shade_hit(w, comps);
+    EXPECT_TRUE(color == Color(0.87677, 0.92436, 0.82918));
+}
+
+//TEST(TestReflection, TestColorAtWithMutuallyReflectiveSurfaces) {
+//    auto w = World();
+//    PointLight light = PointLight(create_point(0, 0, 0), WHITE);
+//    w.add_light(light);
+//    Plane lower;
+//    lower.material.reflective = 1;
+//    lower.set_transform(Transform::translate(0, -1, 0));
+//    w.objects.emplace_back(std::make_unique<Plane>(lower));
+//    Plane upper;
+//    upper.material.reflective = 1;
+//    upper.set_transform(Transform::translate(0, 1, 0));
+//    w.objects.emplace_back(std::make_unique<Plane>(upper));
+//    const auto r = Ray(create_point(0, 0, 0), create_vector(0, 1, 0));
+//    const auto color = color_at(w, r);
+//    EXPECT_TRUE(color == BLACK);
+//}
+
+TEST(TestReflection, TestReflectedColorAtTheMaximumumRecursionDepth) {
+    auto w = default_world();
+    Plane plane;
+    plane.material.reflective = 0.5;
+    plane.set_transform(Transform::translate(0, -1, 0));
+    w.objects.emplace_back(std::make_unique<Plane>(plane));
+    const auto r = Ray(create_point(0, 0, -3), create_vector(0, -sqrt(2) / 2, sqrt(2) / 2));
+    const auto i = Intersection(sqrt(2), w.objects.at(2).get());
+    const auto comps = prepare_computations(i, r);
+    const auto color = reflected_color(w, comps, 0);
+    EXPECT_TRUE(color == BLACK);
+}
+
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
