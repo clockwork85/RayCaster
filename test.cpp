@@ -1253,107 +1253,105 @@ TEST(TestPlane, TestARayIntersectingAPlaneFromBelow) {
 }
 
 TEST(TestPatterns, TestColorConstants) {
-    EXPECT_TRUE(Color(1, 1, 1) == WHITE);
-    EXPECT_TRUE(Color(0, 0, 0) == BLACK);
-    EXPECT_TRUE(Color(0.5, 0.5, 0.5) == GREY);
-    EXPECT_TRUE(Color(1, 0, 0) == RED);
-    EXPECT_TRUE(Color(0, 1, 0) == GREEN);
-    EXPECT_TRUE(Color(0, 0, 1) == BLUE);
+    EXPECT_TRUE(Color(1, 1, 1) == Colors::WHITE);
+    EXPECT_TRUE(Color(0, 0, 0) == Colors::BLACK);
+    EXPECT_TRUE(Color(0.5, 0.5, 0.5) == Colors::GREY);
+    EXPECT_TRUE(Color(1, 0, 0) == Colors::RED);
+    EXPECT_TRUE(Color(0, 1, 0) == Colors::GREEN);
+    EXPECT_TRUE(Color(0, 0, 1) == Colors::BLUE);
 }
 
 TEST(TestPatterns, TestStripePatternConstantInY) {
-    const auto p = stripe_pattern(WHITE, BLACK);
-    EXPECT_TRUE(p->pattern_at(create_point(0, 0, 0)) == WHITE);
-    EXPECT_TRUE(p->pattern_at(create_point(0, 1, 0)) == WHITE);
-    EXPECT_TRUE(p->pattern_at(create_point(0, 2, 0)) == WHITE);
+    const auto p = stripe_pattern(Colors::WHITE, Colors::BLACK);
+    EXPECT_TRUE(p->pattern_at(create_point(0, 0, 0)) == Colors::WHITE);
+    EXPECT_TRUE(p->pattern_at(create_point(0, 1, 0)) == Colors::WHITE);
+    EXPECT_TRUE(p->pattern_at(create_point(0, 2, 0)) == Colors::WHITE);
 }
 
 TEST(TestPatterns, TestStripePatternConstantInZ) {
-    const auto p = stripe_pattern(WHITE, BLACK);
-    EXPECT_TRUE(p->pattern_at(create_point(0, 0, 0)) == WHITE);
-    EXPECT_TRUE(p->pattern_at(create_point(0, 0, 1)) == WHITE);
-    EXPECT_TRUE(p->pattern_at(create_point(0, 0, 2)) == WHITE);
+    const auto p = stripe_pattern(Colors::WHITE, Colors::BLACK);
+    EXPECT_TRUE(p->pattern_at(create_point(0, 0, 0)) == Colors::WHITE);
+    EXPECT_TRUE(p->pattern_at(create_point(0, 0, 1)) == Colors::WHITE);
+    EXPECT_TRUE(p->pattern_at(create_point(0, 0, 2)) == Colors::WHITE);
 }
 
 TEST(TestPatterns, TestStripePatternAlternatesInX) {
-    const auto p = stripe_pattern(WHITE, BLACK);
-    EXPECT_TRUE(p->pattern_at(create_point(0, 0, 0)) == WHITE);
-    EXPECT_TRUE(p->pattern_at(create_point(0.9, 0, 0)) == WHITE);
-    EXPECT_TRUE(p->pattern_at(create_point(1, 0, 0)) == BLACK);
-    EXPECT_TRUE(p->pattern_at(create_point(-0.1, 0, 0)) == BLACK);
-    EXPECT_TRUE(p->pattern_at(create_point(-1, 0, 0)) == BLACK);
-    EXPECT_TRUE(p->pattern_at(create_point(-1.1, 0, 0)) == WHITE);
+    const auto p = stripe_pattern(Colors::WHITE, Colors::BLACK);
+    EXPECT_TRUE(p->pattern_at(create_point(0, 0, 0)) == Colors::WHITE);
+    EXPECT_TRUE(p->pattern_at(create_point(0.9, 0, 0)) == Colors::WHITE);
+    EXPECT_TRUE(p->pattern_at(create_point(1, 0, 0)) == Colors::BLACK);
+    EXPECT_TRUE(p->pattern_at(create_point(-0.1, 0, 0)) == Colors::BLACK);
+    EXPECT_TRUE(p->pattern_at(create_point(-1, 0, 0)) == Colors::BLACK);
+    EXPECT_TRUE(p->pattern_at(create_point(-1.1, 0, 0)) == Colors::WHITE);
 }
 
 TEST(TestPatterns, TestLightingWithAPatternApplied) {
     Material m = Material();
-    m.pattern = stripe_pattern(WHITE, BLACK);
+    m.pattern = stripe_pattern(Colors::WHITE, Colors::BLACK);
     m.ambient = 1;
     m.diffuse = 0;
     m.specular = 0;
-    PointLight light = PointLight(create_point(0, 0, -10), WHITE);
+    PointLight light = PointLight(create_point(0, 0, -10), Colors::WHITE);
     Sphere s = Sphere();
     Color c1 = lighting(m, &s, light, create_point(0.9, 0, 0), create_vector(0, 0, -1), create_vector(0, 0, -1), false);
     Color c2 = lighting(m, &s, light, create_point(1.1, 0, 0), create_vector(0, 0, -1), create_vector(0, 0, -1), false);
-    EXPECT_TRUE(c1 == WHITE);
-    EXPECT_TRUE(c2 == BLACK);
+    EXPECT_TRUE(c1 == Colors::WHITE);
+    EXPECT_TRUE(c2 == Colors::BLACK);
 }
 
 TEST(TestPatterns, TestStripesWithPatternTransformation) {
     const auto object = Sphere();
-    const auto pattern = stripe_pattern(WHITE, BLACK);
+    const auto pattern = stripe_pattern(Colors::WHITE, Colors::BLACK);
     pattern->set_transform(Transform::scale(2, 2, 2));
     const auto c = pattern_at_object(pattern, &object, create_point(1.5, 0, 0));
-    EXPECT_TRUE(c == WHITE);
+    EXPECT_TRUE(c == Colors::WHITE);
 }
 
 TEST(TestPatterns, TestStripesWithObjectAndPatternTransformation) {
     Sphere object = Sphere();
     object.set_transform(Transform::scale(2, 2, 2));
-    const auto pattern = stripe_pattern(WHITE, BLACK);
+    const auto pattern = stripe_pattern(Colors::WHITE, Colors::BLACK);
     pattern->set_transform(Transform::translate(0.5, 0, 0));
     const auto c = pattern_at_object(pattern, &object, create_point(2.5, 0, 0));
-    EXPECT_TRUE(c == WHITE);
+    EXPECT_TRUE(c == Colors::WHITE);
 }
 
 TEST(TestPatterns, TestGradientLinearlyInterpolatesBetweenColor) {
-    const auto pattern = gradient_pattern(WHITE, BLACK);
-    EXPECT_TRUE(pattern->pattern_at(create_point(0, 0, 0)) == WHITE);
+    const auto pattern = gradient_pattern(Colors::WHITE, Colors::BLACK);
+    EXPECT_TRUE(pattern->pattern_at(create_point(0, 0, 0)) == Colors::WHITE);
     EXPECT_TRUE(pattern->pattern_at(create_point(0.25, 0, 0)) == Color(0.75, 0.75, 0.75));
     EXPECT_TRUE(pattern->pattern_at(create_point(0.5, 0, 0)) == Color(0.5, 0.5, 0.5));
     EXPECT_TRUE(pattern->pattern_at(create_point(0.75, 0, 0)) == Color(0.25, 0.25, 0.25));
 }
 
 TEST(TestPatterns, TestRingPatternExtendsInBothXandZ) {
-    const auto pattern = ring_pattern(WHITE, BLACK);
-    EXPECT_TRUE(pattern->pattern_at(create_point(0, 0, 0)) == WHITE);
-    EXPECT_TRUE(pattern->pattern_at(create_point(1, 0, 0)) == BLACK);
-    EXPECT_TRUE(pattern->pattern_at(create_point(0, 0, 1)) == BLACK);
-    EXPECT_TRUE(pattern->pattern_at(create_point(0.708, 0, 0.708)) == BLACK);
+    const auto pattern = ring_pattern(Colors::WHITE, Colors::BLACK);
+    EXPECT_TRUE(pattern->pattern_at(create_point(0, 0, 0)) == Colors::WHITE);
+    EXPECT_TRUE(pattern->pattern_at(create_point(1, 0, 0)) == Colors::BLACK);
+    EXPECT_TRUE(pattern->pattern_at(create_point(0, 0, 1)) == Colors::BLACK);
+    EXPECT_TRUE(pattern->pattern_at(create_point(0.708, 0, 0.708)) == Colors::BLACK);
 }
 
 TEST(TestPatterns, TestCheckerBoardPatternRepeatsInX) {
-    const auto pattern = checker_pattern(WHITE, BLACK);
-    EXPECT_TRUE(pattern->pattern_at(create_point(0, 0, 0)) == WHITE);
-    EXPECT_TRUE(pattern->pattern_at(create_point(0.99, 0, 0)) == WHITE);
-    EXPECT_TRUE(pattern->pattern_at(create_point(1.01, 0, 0)) == BLACK);
+    const auto pattern = checker_pattern(Colors::WHITE, Colors::BLACK);
+    EXPECT_TRUE(pattern->pattern_at(create_point(0, 0, 0)) == Colors::WHITE);
+    EXPECT_TRUE(pattern->pattern_at(create_point(0.99, 0, 0)) == Colors::WHITE);
+    EXPECT_TRUE(pattern->pattern_at(create_point(1.01, 0, 0)) == Colors::BLACK);
 }
 
 TEST(TestPatterns, TestCheckerBoardPatternRepeatsInY) {
-    const auto pattern = checker_pattern(WHITE, BLACK);
-    EXPECT_TRUE(pattern->pattern_at(create_point(0, 0, 0)) == WHITE);
-    EXPECT_TRUE(pattern->pattern_at(create_point(0, 0.99, 0)) == WHITE);
-    EXPECT_TRUE(pattern->pattern_at(create_point(0, 1.01, 0)) == BLACK);
-    EXPECT_TRUE(pattern->pattern_at(create_point(0, 1.02, 0)) == BLACK);
-    EXPECT_TRUE(pattern->pattern_at(create_point(0, 1.99, 0)) == BLACK);
-    EXPECT_TRUE(pattern->pattern_at(create_point(0, 2.01, 0)) == WHITE);
+    const auto pattern = checker_pattern(Colors::WHITE, Colors::BLACK);
+    EXPECT_TRUE(pattern->pattern_at(create_point(0, 0, 0)) == Colors::WHITE);
+    EXPECT_TRUE(pattern->pattern_at(create_point(0, 0.99, 0)) == Colors::WHITE);
+    EXPECT_TRUE(pattern->pattern_at(create_point(0, 1.01, 0)) == Colors::BLACK);
+    EXPECT_TRUE(pattern->pattern_at(create_point(0, 1.02, 0)) == Colors::BLACK);
 }
 
 TEST(TestPatterns, TestCheckerBoardPatternRepeatsInZ) {
-    const auto pattern = checker_pattern(WHITE, BLACK);
-    EXPECT_TRUE(pattern->pattern_at(create_point(0, 0, 0)) == WHITE);
-    EXPECT_TRUE(pattern->pattern_at(create_point(0, 0, 0.99)) == WHITE);
-    EXPECT_TRUE(pattern->pattern_at(create_point(0, 0, 1.01)) == BLACK);
+    const auto pattern = checker_pattern(Colors::WHITE, Colors::BLACK);
+    EXPECT_TRUE(pattern->pattern_at(create_point(0, 0, 0)) == Colors::WHITE);
+    EXPECT_TRUE(pattern->pattern_at(create_point(0, 0, 0.99)) == Colors::WHITE);
+    EXPECT_TRUE(pattern->pattern_at(create_point(0, 0, 1.01)) == Colors::BLACK);
 }
 
 TEST(TestReflection, TestReflectivityforDefaultMaterial) {
@@ -1376,7 +1374,7 @@ TEST(TestReflection, TestReflectedColorForANonreflectiveMaterial) {
     const auto i = Intersection(1, s);
     const auto comps = prepare_computations(i, r);
     const auto color = reflected_color(w, comps);
-    EXPECT_TRUE(color == BLACK);
+    EXPECT_TRUE(color == Colors::BLACK);
 }
 
 TEST(TestReflection, TestReflectedColorForAReflectiveMaterial) {
@@ -1419,7 +1417,7 @@ TEST(TestReflection, TestShadeHitWithAReflectiveMaterial) {
 //    w.objects.emplace_back(std::make_unique<Plane>(upper));
 //    const auto r = Ray(create_point(0, 0, 0), create_vector(0, 1, 0));
 //    const auto color = color_at(w, r);
-//    EXPECT_TRUE(color == BLACK);
+//    EXPECT_TRUE(color == Colors::BLACK);
 //}
 
 TEST(TestReflection, TestReflectedColorAtTheMaximumumRecursionDepth) {
@@ -1432,8 +1430,213 @@ TEST(TestReflection, TestReflectedColorAtTheMaximumumRecursionDepth) {
     const auto i = Intersection(sqrt(2), w.objects.at(2).get());
     const auto comps = prepare_computations(i, r);
     const auto color = reflected_color(w, comps, 0);
-    EXPECT_TRUE(color == BLACK);
+    EXPECT_TRUE(color == Colors::BLACK);
 }
+
+TEST(TestRefraction, TestTransparencyAndRefractiveIndexForDefaultMaterial) {
+    const auto m = Material();
+    EXPECT_TRUE(m.transparency == 0);
+    EXPECT_TRUE(m.refractive_index == 1);
+}
+
+TEST(TestRefraction, TestHelperForProducingASphereWithAGlassyMaterial) {
+    const auto s = glass_sphere();
+    EXPECT_TRUE(s.material.transparency == 1);
+    EXPECT_TRUE(s.material.refractive_index == 1.5);
+}
+
+TEST(TestRefraction, TestFindingN1andN2AtVariousIntersections) {
+    auto A = glass_sphere();
+    A.set_transform(Transform::scale(2, 2, 2));
+    A.material.refractive_index = 1.5;
+    auto B = glass_sphere();
+    B.set_transform(Transform::translate(0, 0, -0.25));
+    B.material.refractive_index = 2;
+    auto C = glass_sphere();
+    C.set_transform(Transform::translate(0, 0, 0.25));
+    C.material.refractive_index = 2.5;
+    auto r = Ray(create_point(0, 0, -4), create_vector(0, 0, 1));
+    std::vector<Intersection> xs;
+    xs.emplace_back(Intersection(2, &A));
+    xs.emplace_back(Intersection(2.75, &B));
+    xs.emplace_back(Intersection(3.25, &C));
+    xs.emplace_back(Intersection(4.75, &B));
+    xs.emplace_back(Intersection(5.25, &C));
+    xs.emplace_back(Intersection(6, &A));
+    const auto comps = prepare_computations(xs.at(0), r, xs);
+    EXPECT_TRUE(comps.n1 == 1);
+    EXPECT_TRUE(comps.n2 == 1.5);
+    const auto comps2 = prepare_computations(xs.at(1), r, xs);
+    EXPECT_TRUE(comps2.n1 == 1.5);
+    EXPECT_TRUE(comps2.n2 == 2);
+    const auto comps3 = prepare_computations(xs.at(2), r, xs);
+    EXPECT_TRUE(comps3.n1 == 2);
+    EXPECT_TRUE(comps3.n2 == 2.5);
+    const auto comps4 = prepare_computations(xs.at(3), r, xs);
+    EXPECT_TRUE(comps4.n1 == 2.5);
+    EXPECT_TRUE(comps4.n2 == 2.5);
+    const auto comps5 = prepare_computations(xs.at(4), r, xs);
+    EXPECT_TRUE(comps5.n1 == 2.5);
+    EXPECT_TRUE(comps5.n2 == 1.5);
+    const auto comps6 = prepare_computations(xs.at(5), r, xs);
+    EXPECT_TRUE(comps6.n1 == 1.5);
+    EXPECT_TRUE(comps6.n2 == 1);
+}
+
+TEST(TestRefraction, TestUnderPointIsOffsetBelowTheSurface) {
+    auto r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
+    auto shape = glass_sphere();
+    shape.set_transform(Transform::translate(0, 0, 1));
+    const auto i = Intersection(5, &shape);
+    const auto comps = prepare_computations(i, r);
+    EXPECT_TRUE(comps.under_point[2] > EPSILON / 2);
+    EXPECT_TRUE(comps.point[2] < comps.under_point[2]);
+}
+
+TEST(TestRefraction, TestRefractedColorWithAnOpaqueSurface) {
+    auto w = default_world();
+    const auto shape = w.objects.at(0).get();
+    const auto r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
+    const auto xs = std::vector<Intersection>{Intersection(4, shape), Intersection(6, shape)};
+    const auto comps = prepare_computations(xs.at(0), r, xs);
+    const auto c = refracted_color(w, comps, 5);
+    EXPECT_TRUE(c == Colors::BLACK);
+}
+
+TEST(TestRefraction, TestRefractedColorAtAMaximumRecursionDepth) {
+    auto A = glass_sphere();
+    A.set_transform(Transform::scale(2, 2, 2));
+    A.material.refractive_index = 1.5;
+    auto B = glass_sphere();
+    B.set_transform(Transform::translate(0, 0, -0.25));
+    B.material.refractive_index = 2;
+    auto C = glass_sphere();
+    C.set_transform(Transform::translate(0, 0, 0.25));
+    C.material.refractive_index = 2.5;
+    auto r = Ray(create_point(0, 0, -5), create_vector(0, 0, 1));
+    std::vector<Intersection> xs;
+    xs.emplace_back(Intersection(4, &A));
+    xs.emplace_back(Intersection(6, &B));
+    xs.emplace_back(Intersection(8, &C));
+    const auto comps = prepare_computations(xs.at(0), r, xs);
+    const auto c = refracted_color(default_world(), comps, 0);
+    EXPECT_TRUE(c == Colors::BLACK);
+}
+
+TEST(TestRefraction, TestRefractedColorUnderTotalInternalReflection) {
+    auto A = glass_sphere();
+    A.set_transform(Transform::scale(2, 2, 2));
+    A.material.refractive_index = 1.5;
+    auto B = glass_sphere();
+    B.set_transform(Transform::translate(0, 0, -0.25));
+    B.material.refractive_index = 2;
+    auto C = glass_sphere();
+    C.set_transform(Transform::translate(0, 0, 0.25));
+    C.material.refractive_index = 2.5;
+    auto r = Ray(create_point(0, 0, std::sqrt(2) / 2), create_vector(0, 1, 0));
+    std::vector<Intersection> xs;
+    xs.emplace_back(Intersection(-std::sqrt(2) / 2, &A));
+    xs.emplace_back(Intersection(std::sqrt(2) / 2, &A));
+    const auto comps = prepare_computations(xs.at(1), r, xs);
+    const auto c = refracted_color(default_world(), comps, 5);
+    EXPECT_TRUE(c == Colors::BLACK);
+}
+
+TEST(TestRefraction, TestRefractedColorWithARefractedRay) {
+    auto w = default_world();
+    auto A = w.objects.at(0).get();
+    A->material.ambient = 1;
+    A->material.pattern = test_pattern();
+    auto B = w.objects.at(1).get();
+    B->material.transparency = 1;
+    B->material.refractive_index = 1.5;
+    auto r = Ray(create_point(0, 0, 0.1), create_vector(0, 1, 0));
+    std::vector<Intersection> xs;
+    xs.emplace_back(Intersection(-0.9899, A));
+    xs.emplace_back(Intersection(-0.4899, B));
+    xs.emplace_back(Intersection(0.4899, B));
+    xs.emplace_back(Intersection(0.9899, A));
+    const auto comps = prepare_computations(xs.at(2), r, xs);
+    const auto c = refracted_color(w, comps, 5);
+//    std::cout << "Color: " << c << std::endl;
+// TODO - this color is off by more than I would expect
+    EXPECT_TRUE(c.isApprox(Color(0, 0.99888, 0.04725), 0.01f));
+}
+
+TEST(TestRefraction, TestShadeHitWithATransparentMaterial) {
+    auto w = default_world();
+    auto floor = Plane();
+    floor.set_transform(Transform::translate(0, -1, 0));
+    floor.material.transparency = 0.5;
+    floor.material.refractive_index = 1.5;
+    w.add_object(floor);
+    auto ball = Sphere();
+    ball.material.color = Colors::RED;
+    ball.material.ambient = 0.5;
+    ball.set_transform(Transform::translate(0, -3.5, -0.5));
+    w.add_object(ball);
+    auto r = Ray(create_point(0, 0, -3), create_vector(0, -std::sqrt(2) / 2, std::sqrt(2) / 2));
+    std::vector<Intersection> xs;
+    xs.emplace_back(Intersection(std::sqrt(2), &floor));
+    const auto comps = prepare_computations(xs.at(0), r, xs);
+    const auto c = shade_hit(w, comps, 5);
+    EXPECT_TRUE(c.isApprox(Color(0.93642, 0.68642, 0.68642), 0.01f));
+}
+
+TEST(TestFresnel, TestSchlickApproxUnderTotalInternalReflection) {
+    auto shape = glass_sphere();
+    auto r = Ray(create_point(0, 0, std::sqrt(2) / 2), create_vector(0, 1, 0));
+    std::vector<Intersection> xs;
+    xs.emplace_back(Intersection(-std::sqrt(2) / 2, &shape));
+    xs.emplace_back(Intersection(std::sqrt(2) / 2, &shape));
+    const auto comps = prepare_computations(xs.at(1), r, xs);
+    const auto reflectance = schlick(comps);
+    EXPECT_TRUE(reflectance == 1.0);
+}
+
+TEST(TestFresnel, TestSchlickApproxWithAPerpendicularViewingAngle) {
+    auto shape = glass_sphere();
+    auto r = Ray(create_point(0, 0, 0), create_vector(0, 1, 0));
+    std::vector<Intersection> xs;
+    xs.emplace_back(Intersection(-1, &shape));
+    xs.emplace_back(Intersection(1, &shape));
+    const auto comps = prepare_computations(xs.at(1), r, xs);
+    const auto reflectance = schlick(comps);
+    std::cout << "Reflectance: " << reflectance << std::endl;
+    EXPECT_FLOAT_EQ(reflectance, 0.04);
+}
+
+TEST(TestFresnel, TestSchlickApproxWithSmallAngleAndN2GreaterThanN1) {
+    auto shape = glass_sphere();
+    auto r = Ray(create_point(0, 0.99, -2), create_vector(0, 0, 1));
+    std::vector<Intersection> xs;
+    xs.emplace_back(Intersection(1.8589, &shape));
+    const auto comps = prepare_computations(xs.at(0), r, xs);
+    const auto reflectance = schlick(comps);
+    EXPECT_TRUE(is_equal(reflectance, 0.48873, 0.0001f));
+}
+
+TEST(TestFresnel, TestShadeHitWithReflectiveTransparentMaterial) {
+     auto w = default_world();
+    auto floor = Plane();
+    floor.set_transform(Transform::translate(0, -1, 0));
+    floor.material.reflective = 0.5;
+    floor.material.transparency = 0.5;
+    floor.material.refractive_index = 1.5;
+    w.add_object(floor);
+    auto ball = Sphere();
+    ball.material.color = Colors::RED;
+    ball.material.ambient = 0.5;
+    ball.set_transform(Transform::translate(0, -3.5, -0.5));
+    w.add_object(ball);
+    auto r = Ray(create_point(0, 0, -3), create_vector(0, -std::sqrt(2) / 2, std::sqrt(2) / 2));
+    std::vector<Intersection> xs;
+    xs.emplace_back(Intersection(std::sqrt(2), &floor));
+    const auto comps = prepare_computations(xs.at(0), r, xs);
+    const auto c = shade_hit(w, comps, 5);
+    EXPECT_TRUE(c.isApprox(Color(0.93391, 0.69643, 0.69243), 0.01f));
+}
+
 
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);

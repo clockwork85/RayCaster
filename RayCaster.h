@@ -48,10 +48,12 @@ Vector4f reflect(const Vector4f& in, const Vector4f& normal);
 Intersection hit(std::vector<Intersection> intersections);
 Color lighting(const Material& material, const Shape* shape, const PointLight& light, const Vector4f& position, const Vector4f& eye, const Vector4f& normal, const bool in_shadow);
 bool is_shadowed(const World& world, const Vector4f& light_position, const Vector4f& point);
-Computation prepare_computations(const Intersection& intersection, const Ray& ray);
+Computation prepare_computations(const Intersection& intersection, const Ray& ray, const std::vector<Intersection>& intersections = {});
 Color shade_hit(const World& world, const Computation& comps, const int remaining=4);
 Color color_at(const World& world, const Ray& ray, const int remaining=4);
 Color reflected_color(const World& world, const Computation& comps, const int remaining=4);
+Color refracted_color(const World& world, const Computation& comps, const int remaining=4);
+float schlick(const Computation& comps);
 Ray ray_for_pixel(const Camera& camera, const int px, const int py);
 Canvas render(const Camera& camera, const World& world);
 

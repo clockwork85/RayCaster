@@ -80,5 +80,16 @@ inline std::shared_ptr<Pattern> checker_pattern(const Color& a, const Color& b) 
     return std::make_shared<CheckerPattern>(a, b);
 }
 
+struct TestPattern : public Pattern {
+    Color pattern_at(const Vector4f& p) const override {
+        return Color(p.x(), p.y(), p.z());
+    }
+};
+
+
+inline std::shared_ptr<Pattern> test_pattern() {
+    return std::make_shared<TestPattern>(TestPattern());
+}
+
 
 #endif //RAYCASTER_PATTERNS_H

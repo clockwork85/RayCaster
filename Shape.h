@@ -76,4 +76,6 @@ inline Color pattern_at_object(const std::shared_ptr<Pattern>& pattern, const Sh
     return pattern->pattern_at(pattern_point);
 }
 
+
+
 #endif //RAYCASTER_SHAPE_H

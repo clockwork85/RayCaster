@@ -17,6 +17,12 @@ struct Sphere : public Shape {
     std::vector<Intersection> local_intersect(const Ray& local_ray) const override;
 };
 
+inline Sphere glass_sphere() {
+    Sphere s;
+    s.set_material(glass());
+    return s;
+}
+
 //class Sphere {
 //public:
 //    Sphere() : center(0.0f, 0.0f, 0.0f, 1.0f), material(Material()) {}

@@ -80,7 +80,7 @@ bool is_shadowed(const World& world, const Vector4f& light_position, const Vecto
     return (h.t > 0) && (h.t < distance);
 }
 
-Computation prepare_computations(const Intersection& intersection, const Ray& ray) {
+Computation prepare_computations(const Intersection& intersection, const Ray& ray, const std::vector<Intersection>& intersections) {
     Computation comps;
     comps.t = intersection.t;
     comps.point = ray.position(comps.t);
@@ -95,21 +95,50 @@ Computation prepare_computations(const Intersection& intersection, const Ray& ra
     }
     comps.reflectv = reflect(ray.direction, comps.normalv);
     comps.over_point = comps.point + comps.normalv * EPSILON;
+    comps.under_point = comps.point - comps.normalv * EPSILON;
+//    return comps;
+    // Refraction of n1 and n2
+    std::vector<const Shape*> containers{};
+    for (const Intersection& i : intersections) {
+        if (i == intersection) {
+            if (containers.empty()) {
+                comps.n1 = 1.0f;
+            } else {
+                comps.n1 = containers.back()->material.refractive_index;
+            }
+        }
+        auto it = std::find(containers.begin(), containers.end(), i.object);
+        if (it != containers.end()) {
+            containers.erase(it);
+        } else {
+            containers.emplace_back(i.object);
+        }
+        if (i == intersection) {
+            if (containers.empty()) {
+                comps.n2 = 1.0f;
+            } else {
+                comps.n2 = containers.back()->material.refractive_index;
+            }
+            break;
+        }
+    }
     return comps;
 }
 
 Color shade_hit(const World& world, const Computation& comps, const int remaining) {
     // Color surface = Color(0.0f, 0.0f, 0.0f);
     bool shadowed = is_shadowed(world, world.lights[0].position(), comps.over_point);
-//    std::cout << "Shadowed: " << shadowed << std::endl;
-//    std::cout << "Point: " << comps.point << std::endl;
-//    std::cout << "Over point: " << comps.over_point << std::endl;
-
 //    for (PointLight& light : world.lights) {
     Color surface =  lighting(comps.object->material, comps.object, world.lights[0], comps.over_point, comps.eyev, comps.normalv, shadowed);
     //   }
     Color reflected = reflected_color(world, comps, remaining);
-    return surface + reflected;
+    Color refracted = refracted_color(world, comps, remaining);
+
+    if(comps.object->material.reflective > 0 && comps.object->material.transparency > 0) {
+        float reflectance = schlick(comps);
+        return surface + reflected * reflectance + refracted * (1 - reflectance);
+    }
+    return surface + reflected + refracted;
 }
 
 Color color_at(const World& world, const Ray& ray, const int remaining) {
@@ -124,14 +153,49 @@ Color color_at(const World& world, const Ray& ray, const int remaining) {
 
 Color reflected_color(const World& world, const Computation& comps, const int remaining) {
     if (remaining <= 0) {
-        return Color(0.0f, 0.0f, 0.0f);
+        return Colors::BLACK;
     }
     if (comps.object->material.reflective == 0.0f) {
-        return BLACK;
+        return Colors::BLACK;
     }
     Ray reflect_ray {comps.over_point, comps.reflectv};
     Color color = color_at(world, reflect_ray, remaining - 1);
     return color * comps.object->material.reflective;
+}
+
+Color refracted_color(const World& world, const Computation& comps, const int remaining) {
+    if (remaining <= 0) {
+        return Colors::BLACK;
+    }
+    if (comps.object->material.transparency == 0.0f) {
+        return Colors::BLACK;
+    }
+    const float n_ratio = comps.n1 / comps.n2;
+    const float cos_i = comps.eyev.dot(comps.normalv);
+    const float sin2_t = n_ratio * n_ratio * (1.0f - cos_i * cos_i);
+    if (sin2_t > 1.0f) {
+        return Colors::BLACK;
+    }
+    const float cos_t = sqrt(1.0f - sin2_t);
+    const Vector4f direction = comps.normalv * (n_ratio * cos_i - cos_t) - comps.eyev * n_ratio;
+    const Ray refract_ray {comps.under_point, direction};
+    return color_at(world, refract_ray, remaining - 1) * comps.object->material.transparency;
+}
+
+float schlick(const Computation& comps) {
+    float cos = comps.eyev.dot(comps.normalv);
+    if (comps.n1 > comps.n2) {
+        float n = comps.n1 / comps.n2;
+        float sin2_t = n * n * (1.0f - cos * cos);
+        if (sin2_t > 1.0f) {
+            return 1.0f;
+        }
+        float cos_t = sqrt(1.0f - sin2_t);
+        cos = cos_t;
+    }
+    float r0 = (comps.n1 - comps.n2) / (comps.n1 + comps.n2);
+    r0 = r0 * r0;
+    return r0 + (1.0f - r0) * pow((1.0f - cos), 5);
 }
 
 Ray ray_for_pixel(const Camera& camera, const int px, const int py) {

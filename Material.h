@@ -10,7 +10,12 @@
 
 class Material {
 public:
-    Material() : color(Color(1, 1, 1)), ambient(0.1), diffuse(0.9), specular(0.9), shininess(200.0), reflective(0.0), pattern(nullptr) {};
+    Material() : color(Color(1, 1, 1)),
+                ambient(0.1), diffuse(0.9), specular(0.9), shininess(200.0),
+                reflective(0.0), transparency(0.0), refractive_index(1.0),
+                pattern(nullptr) {};
+    Material(const Color& color, float ambient, float diffuse, float specular, float shininess, float reflective, float transparency, float refractive_index, std::shared_ptr<Pattern> pattern) :
+            color(color), ambient(ambient), diffuse(diffuse), specular(specular), shininess(shininess), reflective(reflective), transparency(transparency), refractive_index(refractive_index), pattern(nullptr) {};
 
     Color color;
     float ambient;
@@ -18,6 +23,8 @@ public:
     float specular;
     float shininess;
     float reflective;
+    float transparency;
+    float refractive_index;
     std::shared_ptr<Pattern> pattern = nullptr;
 
     // Equality
@@ -25,5 +32,10 @@ public:
         return (color == rhs.color && is_equal(ambient, rhs.ambient) && is_equal(diffuse, rhs.diffuse) && is_equal(specular, rhs.specular) && is_equal(shininess, rhs.shininess));
     }
 };
+
+// Glass material
+inline Material glass() {
+    return Material(Color(1.0, 1.0, 1.0), 0.0, 0.5, 0.5, 200.0, 0.0, 1.0, 1.5, nullptr);
+}
 
 #endif //RAYCASTER_MATERIAL_H
