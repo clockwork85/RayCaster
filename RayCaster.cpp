@@ -147,7 +147,7 @@ Color color_at(const World& world, const Ray& ray, const int remaining) {
     if(intersection.object == nullptr)  {
         return Color(0.0f, 0.0f, 0.0f);
     }
-    const auto comps = prepare_computations(intersection, ray);
+    const auto comps = prepare_computations(intersection, ray, intersections);
     return shade_hit(world, comps, remaining);
 }
 
@@ -155,7 +155,7 @@ Color reflected_color(const World& world, const Computation& comps, const int re
     if (remaining <= 0) {
         return Colors::BLACK;
     }
-    if (comps.object->material.reflective == 0.0f) {
+    if (is_equal(comps.object->material.reflective, 0.0f, EPSILON)) {
         return Colors::BLACK;
     }
     Ray reflect_ray {comps.over_point, comps.reflectv};
@@ -167,7 +167,7 @@ Color refracted_color(const World& world, const Computation& comps, const int re
     if (remaining <= 0) {
         return Colors::BLACK;
     }
-    if (comps.object->material.transparency == 0.0f) {
+    if (is_equal(comps.object->material.transparency, 0.0f, EPSILON)) {
         return Colors::BLACK;
     }
     const float n_ratio = comps.n1 / comps.n2;
@@ -185,17 +185,16 @@ Color refracted_color(const World& world, const Computation& comps, const int re
 float schlick(const Computation& comps) {
     float cos = comps.eyev.dot(comps.normalv);
     if (comps.n1 > comps.n2) {
-        float n = comps.n1 / comps.n2;
-        float sin2_t = n * n * (1.0f - cos * cos);
+        const float n = comps.n1 / comps.n2;
+        const float sin2_t = n * n * (1.0f - cos * cos);
         if (sin2_t > 1.0f) {
             return 1.0f;
         }
-        float cos_t = sqrt(1.0f - sin2_t);
+        const float cos_t = sqrt(1.0f - sin2_t);
         cos = cos_t;
     }
-    float r0 = (comps.n1 - comps.n2) / (comps.n1 + comps.n2);
-    r0 = r0 * r0;
-    return r0 + (1.0f - r0) * pow((1.0f - cos), 5);
+    float r0 = pow((comps.n1 - comps.n2) / (comps.n1 + comps.n2), 2);
+    return r0 + (1.0f - r0) * pow((1.0f - cos), 5.0f);
 }
 
 Ray ray_for_pixel(const Camera& camera, const int px, const int py) {

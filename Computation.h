@@ -18,8 +18,11 @@ struct Computation {
         Vector4f eyev{0, 0, 0, 0};
         Vector4f normalv{0, 0, 0, 0};
         Vector4f reflectv{0, 0, 0, 0};
+        float n1{1};
+        float n2{1};
         bool inside{false};
         Vector4f over_point{point + normalv * EPSILON};
+        Vector4f under_point{point - normalv * EPSILON};
 };
 
 #endif //RAYCASTER_COMPUTATION_H

@@ -1580,6 +1580,7 @@ TEST(TestRefraction, TestShadeHitWithATransparentMaterial) {
     xs.emplace_back(Intersection(std::sqrt(2), &floor));
     const auto comps = prepare_computations(xs.at(0), r, xs);
     const auto c = shade_hit(w, comps, 5);
+    std::cout << "Color: " << c << std::endl;
     EXPECT_TRUE(c.isApprox(Color(0.93642, 0.68642, 0.68642), 0.01f));
 }
 
@@ -1613,6 +1614,7 @@ TEST(TestFresnel, TestSchlickApproxWithSmallAngleAndN2GreaterThanN1) {
     xs.emplace_back(Intersection(1.8589, &shape));
     const auto comps = prepare_computations(xs.at(0), r, xs);
     const auto reflectance = schlick(comps);
+    std::cout << "Reflectance: " << reflectance << std::endl;
     EXPECT_TRUE(is_equal(reflectance, 0.48873, 0.0001f));
 }
 
@@ -1634,6 +1636,7 @@ TEST(TestFresnel, TestShadeHitWithReflectiveTransparentMaterial) {
     xs.emplace_back(Intersection(std::sqrt(2), &floor));
     const auto comps = prepare_computations(xs.at(0), r, xs);
     const auto c = shade_hit(w, comps, 5);
+    std::cout << "Color: " << c << std::endl;
     EXPECT_TRUE(c.isApprox(Color(0.93391, 0.69643, 0.69243), 0.01f));
 }
 

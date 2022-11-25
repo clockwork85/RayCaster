@@ -15,15 +15,17 @@ using Matrix4f = Eigen::Matrix4f;
 
 int main() {
 
-    int height = 500;
-    int width = 250;
+    int height = 1000;
+    int width = 500;
 
     auto floor = Plane();
 //    floor.material.color = Color(1, 0.9, 0.9);
-    floor.material.pattern = checker_pattern(Colors::WHITE, Colors::BLACK);
+    floor.material.pattern = stripe_pattern(Colors::GREY, Colors::YELLOW);
     floor.material.pattern->set_transform(Transform::scale(1, 1, 1));
-    floor.material.pattern->set_transform(Transform::rotate_y(-M_PI_2));
-    floor.material.reflective = 0.5;
+    floor.material.pattern->set_transform(Transform::rotate_y(-M_PI_4));
+    floor.material.reflective = 0.95;
+//    floor.material.refractive_index = 1.7;
+//    floor.material.transparency = 0.25;
 
     auto middle = Sphere();
     middle.material.pattern = stripe_pattern(Colors::RED, Colors::GREEN);
@@ -50,14 +52,17 @@ int main() {
     auto left = Sphere();
 //    left.material.pattern = ring_pattern(GREEN, BLUE);
 //    left.material.pattern->set_transform(Transform::scale(0.2, 0.2, 0.2));
-//    left.material.color = Color(0.1647f, 0.0039f, 0.2039f);
-//    left.material.diffuse = 0.7f;
-//    left.material.specular = 0.9f;
+//   left.material.color = Color(0.1647f, 0.0039f, 0.2039f); // dark purple
+    left.material.color = Color(0.95, 0.95, 0.95);
+
 //    left.material.reflective = 0.5;
     left.set_transform(Transform::translate(-1.5f, 0.33f, -0.75f) * Transform::scale(0.33f, 0.33f, 0.33f));
-    left.set_material(glass());
-    left.material.transparency = 0.1;
+    left.material.diffuse = 0.7f;
+    left.material.specular = 0.9f;
+    left.material.ambient = 0.1f;
+    left.material.transparency = 0.7;
     left.material.reflective = 1.0;
+    left.material.refractive_index = 2.2;
     World world;
 
     world.add_object(middle);
