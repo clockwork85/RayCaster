@@ -42,6 +42,7 @@ add_executable(RayCaster
 
         # Sources
         Canvas.cpp
+        Cube.cpp
         Transform.cpp
         Sphere.cpp
         RayCaster.cpp
@@ -79,5 +80,5 @@ add_executable(RayCasterTest
         RayCaster.cpp
         Transform.cpp
         World.cpp
-        Patterns.h)
+        Patterns.h Cube.cpp Cube.h)
 target_link_libraries(RayCasterTest gtest gtest_main Eigen3::Eigen)

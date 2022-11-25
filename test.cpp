@@ -9,6 +9,7 @@
 #include "Camera.h"
 #include "Canvas.h"
 #include "Color.h"
+#include "Cube.h"
 #include "Lights.h"
 #include "Material.h"
 #include "Pattern.h"
@@ -1580,7 +1581,6 @@ TEST(TestRefraction, TestShadeHitWithATransparentMaterial) {
     xs.emplace_back(Intersection(std::sqrt(2), &floor));
     const auto comps = prepare_computations(xs.at(0), r, xs);
     const auto c = shade_hit(w, comps, 5);
-    std::cout << "Color: " << c << std::endl;
     EXPECT_TRUE(c.isApprox(Color(0.93642, 0.68642, 0.68642), 0.01f));
 }
 
@@ -1603,7 +1603,6 @@ TEST(TestFresnel, TestSchlickApproxWithAPerpendicularViewingAngle) {
     xs.emplace_back(Intersection(1, &shape));
     const auto comps = prepare_computations(xs.at(1), r, xs);
     const auto reflectance = schlick(comps);
-    std::cout << "Reflectance: " << reflectance << std::endl;
     EXPECT_FLOAT_EQ(reflectance, 0.04);
 }
 
@@ -1614,7 +1613,6 @@ TEST(TestFresnel, TestSchlickApproxWithSmallAngleAndN2GreaterThanN1) {
     xs.emplace_back(Intersection(1.8589, &shape));
     const auto comps = prepare_computations(xs.at(0), r, xs);
     const auto reflectance = schlick(comps);
-    std::cout << "Reflectance: " << reflectance << std::endl;
     EXPECT_TRUE(is_equal(reflectance, 0.48873, 0.0001f));
 }
 
@@ -1636,10 +1634,123 @@ TEST(TestFresnel, TestShadeHitWithReflectiveTransparentMaterial) {
     xs.emplace_back(Intersection(std::sqrt(2), &floor));
     const auto comps = prepare_computations(xs.at(0), r, xs);
     const auto c = shade_hit(w, comps, 5);
-    std::cout << "Color: " << c << std::endl;
     EXPECT_TRUE(c.isApprox(Color(0.93391, 0.69643, 0.69243), 0.01f));
 }
 
+TEST(TestCubes, TestARayIntersectsACube) {
+    Cube c;
+    auto origin = create_point(5, 0.5, 0);
+    auto direction = create_vector(-1, 0, 0);
+    auto r = Ray(origin, direction);
+    auto xs = c.local_intersect(r);
+    EXPECT_EQ(xs.size(), 2);
+    EXPECT_FLOAT_EQ(xs.at(0).t, 4);
+    EXPECT_FLOAT_EQ(xs.at(1).t, 6);
+    auto origin2 = create_point(-5, 0.5, 0);
+    auto direction2 = create_vector(1, 0, 0);
+    auto r2 = Ray(origin2, direction2);
+    auto xs2 = c.local_intersect(r2);
+    EXPECT_EQ(xs2.size(), 2);
+    EXPECT_FLOAT_EQ(xs2.at(0).t, 4);
+    EXPECT_FLOAT_EQ(xs2.at(1).t, 6);
+    auto origin3 = create_point(0.5, 5, 0);
+    auto direction3 = create_vector(0, -1, 0);
+    auto r3 = Ray(origin3, direction3);
+    auto xs3 = c.local_intersect(r3);
+    EXPECT_EQ(xs3.size(), 2);
+    EXPECT_FLOAT_EQ(xs3.at(0).t, 4);
+    EXPECT_FLOAT_EQ(xs3.at(1).t, 6);
+    auto origin4 = create_point(0.5, -5, 0);
+    auto direction4 = create_vector(0, 1, 0);
+    auto r4 = Ray(origin4, direction4);
+    auto xs4 = c.local_intersect(r4);
+    EXPECT_EQ(xs4.size(), 2);
+    EXPECT_FLOAT_EQ(xs4.at(0).t, 4);
+    EXPECT_FLOAT_EQ(xs4.at(1).t, 6);
+    auto origin5 = create_point(0.5, 0, 5);
+    auto direction5 = create_vector(0, 0, -1);
+    auto r5 = Ray(origin5, direction5);
+    auto xs5 = c.local_intersect(r5);
+    EXPECT_EQ(xs5.size(), 2);
+    EXPECT_FLOAT_EQ(xs5.at(0).t, 4);
+    EXPECT_FLOAT_EQ(xs5.at(1).t, 6);
+    auto origin6 = create_point(0.5, 0, -5);
+    auto direction6 = create_vector(0, 0, 1);
+    auto r6 = Ray(origin6, direction6);
+    auto xs6 = c.local_intersect(r6);
+    EXPECT_EQ(xs6.size(), 2);
+    EXPECT_FLOAT_EQ(xs6.at(0).t, 4);
+    EXPECT_FLOAT_EQ(xs6.at(1).t, 6);
+    auto origin7 = create_point(0, 0.5, 0);
+    auto direction7 = create_vector(0, 0, 1);
+    auto r7 = Ray(origin7, direction7);
+    auto xs7 = c.local_intersect(r7);
+    EXPECT_EQ(xs7.size(), 2);
+    EXPECT_FLOAT_EQ(xs7.at(0).t, -1);
+    EXPECT_FLOAT_EQ(xs7.at(1).t, 1);
+}
+
+TEST(TestCubes, TestARayMissesACube) {
+    Cube c;
+    auto origin = create_point(-2, 0, 0);
+    auto direction = create_vector(0.2673, 0.5345, 0.8018);
+    auto r = Ray(origin, direction);
+    auto xs = c.local_intersect(r);
+    EXPECT_EQ(xs.size(), 0);
+    auto origin2 = create_point(0, -2, 0);
+    auto direction2 = create_vector(0.8018, 0.2673, 0.5345);
+    auto r2 = Ray(origin2, direction2);
+    auto xs2 = c.local_intersect(r2);
+    EXPECT_EQ(xs2.size(), 0);
+    auto origin3 = create_point(0, 0, -2);
+    auto direction3 = create_vector(0.5345, 0.8018, 0.2673);
+    auto r3 = Ray(origin3, direction3);
+    auto xs3 = c.local_intersect(r3);
+    EXPECT_EQ(xs3.size(), 0);
+    auto origin4 = create_point(2, 0, 2);
+    auto direction4 = create_vector(0, 0, -1);
+    auto r4 = Ray(origin4, direction4);
+    auto xs4 = c.local_intersect(r4);
+    EXPECT_EQ(xs4.size(), 0);
+    auto origin5 = create_point(0, 2, 2);
+    auto direction5 = create_vector(0, -1, 0);
+    auto r5 = Ray(origin5, direction5);
+    auto xs5 = c.local_intersect(r5);
+    EXPECT_EQ(xs5.size(), 0);
+    auto origin6 = create_point(2, 2, 0);
+    auto direction6 = create_vector(-1, 0, 0);
+    auto r6 = Ray(origin6, direction6);
+    auto xs6 = c.local_intersect(r6);
+    EXPECT_EQ(xs6.size(), 0);
+}
+
+TEST(TestCubes, TestTheNormalOntheSurfaceOfACube) {
+    Cube c;
+    auto p = create_point(1, 0.5, -0.8);
+    auto n = c.local_normal_at(p);
+    EXPECT_TRUE(n.isApprox(create_vector(1, 0, 0)));
+    auto p2 = create_point(-1, -0.2, 0.9);
+    auto n2 = c.local_normal_at(p2);
+    EXPECT_TRUE(n2.isApprox(create_vector(-1, 0, 0)));
+    auto p3 = create_point(-0.4, 1, -0.1);
+    auto n3 = c.local_normal_at(p3);
+    EXPECT_TRUE(n3.isApprox(create_vector(0, 1, 0)));
+    auto p4 = create_point(0.3, -1, -0.7);
+    auto n4 = c.local_normal_at(p4);
+    EXPECT_TRUE(n4.isApprox(create_vector(0, -1, 0)));
+    auto p5 = create_point(-0.6, 0.3, 1);
+    auto n5 = c.local_normal_at(p5);
+    EXPECT_TRUE(n5.isApprox(create_vector(0, 0, 1)));
+    auto p6 = create_point(0.4, 0.4, -1);
+    auto n6 = c.local_normal_at(p6);
+    EXPECT_TRUE(n6.isApprox(create_vector(0, 0, -1)));
+    auto p7 = create_point(1, 1, 1);
+    auto n7 = c.local_normal_at(p7);
+    EXPECT_TRUE(n7.isApprox(create_vector(1, 0, 0)));
+    auto p8 = create_point(-1, -1, -1);
+    auto n8 = c.local_normal_at(p8);
+    EXPECT_TRUE(n8.isApprox(create_vector(-1, 0, 0)));
+}
 
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);
