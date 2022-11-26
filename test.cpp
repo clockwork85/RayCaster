@@ -9,7 +9,9 @@
 #include "Camera.h"
 #include "Canvas.h"
 #include "Color.h"
+#include "Cone.h"
 #include "Cube.h"
+#include "Cylinder.h"
 #include "Lights.h"
 #include "Material.h"
 #include "Pattern.h"
@@ -1750,6 +1752,109 @@ TEST(TestCubes, TestTheNormalOntheSurfaceOfACube) {
     auto p8 = create_point(-1, -1, -1);
     auto n8 = c.local_normal_at(p8);
     EXPECT_TRUE(n8.isApprox(create_vector(-1, 0, 0)));
+}
+
+
+
+TEST(TestCylinder, TestARayMissesACylinder) {
+    Cylinder c;
+    auto origin = create_point(1, 0, 0);
+    auto direction = create_vector(0, 1, 0);
+    auto r = Ray(origin, direction);
+    auto xs = c.local_intersect(r);
+    EXPECT_EQ(xs.size(), 0);
+    auto origin2 = create_point(0, 0, 0);
+    auto direction2 = create_vector(0, 1, 0);
+    auto r2 = Ray(origin2, direction2);
+    auto xs2 = c.local_intersect(r2);
+    EXPECT_EQ(xs2.size(), 0);
+    auto origin3 = create_point(0, 0, -5);
+    auto direction3 = create_vector(1, 1, 1);
+    auto r3 = Ray(origin3, direction3);
+    auto xs3 = c.local_intersect(r3);
+    EXPECT_EQ(xs3.size(), 0);
+}
+
+TEST(TestCylinder, TestARayStrikesACylinder) {
+    Cylinder c;
+    const std::vector<std::tuple<Vector4f, Vector4f, float, float>> data {
+        {create_point(1, 0, -5), create_vector(0, 0, 1), 5, 5},
+        {create_point(0, 0, -5), create_vector(0, 0, 1), 4, 6},
+        {create_point(0.5, 0, -5), create_vector(0.1, 1, 1), 6.80798, 7.08872}
+    };
+    for (auto d : data) {
+        auto origin = std::get<0>(d);
+        auto direction = std::get<1>(d);
+        auto norm_direction = direction.normalized();
+        auto r = Ray(origin, norm_direction);
+        auto xs = c.local_intersect(r);
+        EXPECT_EQ(xs.size(), 2);
+        EXPECT_TRUE(is_equal(xs.at(0).t, std::get<2>(d)));
+        EXPECT_TRUE(is_equal(xs.at(1).t, std::get<3>(d)));
+    }
+}
+
+TEST(TestCylinder, TestNormalVectorOnACylinder) {
+    Cylinder c;
+    const std::vector<std::tuple<Vector4f, Vector4f>> data {
+        {create_point(1, 0, 0), create_vector(1, 0, 0)},
+        {create_point(0, 5, -1), create_vector(0, 0, -1)},
+        {create_point(0, -2, 1), create_vector(0, 0, 1)},
+        {create_point(-1, 1, 0), create_vector(-1, 0, 0)}
+    };
+    for (const auto& [point, normal] : data) {
+        auto nvec = c.local_normal_at(point);
+        EXPECT_TRUE(nvec.isApprox(normal));
+    }
+}
+
+TEST(TestCylinder, TestTheDefaultMinimumAndMaximumForACylinder) {
+    Cylinder c;
+    EXPECT_FLOAT_EQ(c.minimum, -INFINITY);
+    EXPECT_FLOAT_EQ(c.maximum, INFINITY);
+}
+
+TEST(TestCylinder, TestIntersectingAConstrainedCylinder) {
+    Cylinder c;
+    c.minimum = 1;
+    c.maximum = 2;
+    const std::vector<std::tuple<Vector4f, Vector4f, int>> data {
+        {create_point(0, 1.5, 0), create_vector(0.1, 1, 0), 0},
+        {create_point(0, 3, -5), create_vector(0, 0, 1), 0},
+        {create_point(0, 0, -5), create_vector(0, 0, 1), 0},
+        {create_point(0, 2, -5), create_vector(0, 0, 1), 0},
+        {create_point(0, 1, -5), create_vector(0, 0, 1), 0},
+        {create_point(0, 1.5, -2), create_vector(0, 0, 1), 2}
+    };
+    for (const auto& [origin, direction, count] : data) {
+        auto r = Ray(origin, direction.normalized());
+        auto xs = c.local_intersect(r);
+        EXPECT_EQ(xs.size(), count);
+    }
+}
+
+TEST(TestCylinder, TestTheDefaultClosedValueForACylinder) {
+    Cylinder c;
+    EXPECT_FALSE(c.closed);
+}
+
+TEST(TestCylinder, TestIntersectingTheCapsOfAClosedCylinder) {
+    Cylinder c;
+    c.minimum = 1;
+    c.maximum = 2;
+    c.closed = true;
+    const std::vector<std::tuple<Vector4f, Vector4f, int>> data {
+        {create_point(0, 3, 0), create_vector(0, -1, 0), 2},
+        {create_point(0, 3, -2), create_vector(0, -1, 2), 2},
+        {create_point(0, 4, -2), create_vector(0, -1, 1), 2},
+        {create_point(0, 0, -2), create_vector(0, 1, 2), 2},
+        {create_point(0, -1, -2), create_vector(0, 1, 1), 2}
+    };
+    for (const auto& [origin, direction, count] : data) {
+        auto r = Ray(origin, direction.normalized());
+        auto xs = c.local_intersect(r);
+        EXPECT_EQ(xs.size(), count);
+    }
 }
 
 int main(int argc, char **argv) {

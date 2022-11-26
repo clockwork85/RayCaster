@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "Canvas.h"
+#include "Cylinder.h"
 #include "Cube.h"
 #include "Color.h"
 #include "MathUtils.h"
@@ -16,8 +17,8 @@ using Matrix4f = Eigen::Matrix4f;
 
 int main() {
 
-    int height = 1000;
-    int width = 500;
+    int height = 2000;
+    int width = 1000;
 
     auto floor = Plane();
 //    floor.material.color = Color(1, 0.9, 0.9);
@@ -37,13 +38,15 @@ int main() {
     middle.material.diffuse = 0.7f;
     middle.material.specular = 0.3f;
     middle.material.reflective = 0.1;
-    middle.set_transform(Transform::translate(-0.5f, 1.0f, 0.5f) * Transform::rotate_y(M_PI / 6));
+    middle.material.transparency = 0.0;
+    middle.material.shininess = 1000;
+    middle.set_transform(Transform::translate(0.0f, 1.0f, 1.0f) * Transform::rotate_y(M_PI / 6));
 
-    // auto right = Sphere();
-    auto right = Cube();
-//    right.material.pattern = gradient_pattern(Colors::BLUE, Colors::BLACK);
+    auto right = Sphere();
+    //auto right = Cube();
+    right.material.pattern = gradient_pattern(Colors::BLUE, Colors::BLACK);
 //    right.material.pattern->set_transform(Transform::scale(3, 3, 3));
-//    right.material.pattern->set_transform(Transform::rotate_z(-M_PI / 4));
+    right.material.pattern->set_transform(Transform::rotate_y(-M_PI / 3));
 // Dark blue color
     right.material.color = Color(0.0f, 0.2f, 0.9f);
 //    right.material.color = Color(0.5f, 1.0f, 0.1f);
@@ -52,23 +55,27 @@ int main() {
     right.material.reflective = 0.75;
     right.material.transparency = 0.75;
     right.material.refractive_index = 1.5;
-    right.set_transform(Transform::translate(1.5f, 0.5f, -0.5f) * Transform::scale(0.5f, 0.5f, 0.5f));
+    right.set_transform(Transform::translate(1.5f, 0.5f, -1.0f) * Transform::scale(0.5f, 0.5f, 0.5f) );
 
-    //auto left = Sphere();
-    auto left = Cube();
+    auto left = Cylinder();
+    //auto left = Cube();
 //    left.material.pattern = ring_pattern(GREEN, BLUE);
 //    left.material.pattern->set_transform(Transform::scale(0.2, 0.2, 0.2));
 //   left.material.color = Color(0.1647f, 0.0039f, 0.2039f); // dark purple
+    left.closed = true;
+    left.minimum = 0;
+    left.maximum = 1;
     left.material.color = Color(0.95, 0.95, 0.95);
 
 //    left.material.reflective = 0.5;
-    left.set_transform(Transform::translate(-1.5f, 0.33f, -0.75f) * Transform::scale(0.33f, 0.33f, 0.33f));
+    left.set_transform(Transform::translate(-1.7f, 0.0f, -0.5f) * Transform::scale(0.5f, 1.5f, 0.5f) * Transform::rotate_x(-M_PI / 64.0f));
     left.material.diffuse = 0.7f;
     left.material.specular = 0.9f;
     left.material.ambient = 0.1f;
     left.material.transparency = 0.7;
     left.material.reflective = 1.0;
     left.material.refractive_index = 2.2;
+    left.material.shininess = 500;
     World world;
 
     world.add_object(middle);
