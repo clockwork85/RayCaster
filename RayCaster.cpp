@@ -37,30 +37,36 @@ Intersection hit(std::vector<Intersection> intersections) {
     return Intersection();
 }
 
-Color lighting(const Material& material, const Shape* shape, const PointLight& light, const Vector4f& position, const Vector4f& eye, const Vector4f& normal, const bool in_shadow) {
+Color lighting(const Material& material,
+               const Shape* shape,
+               const Light& light,
+               const Vector4f& position,
+               const Vector4f& eye,
+               const Vector4f& normal,
+               const float intensity) {
     Color material_color = material.color;
     if(material.pattern != nullptr) {
         material_color = pattern_at_object(material.pattern, shape, position);
     }
-    Color effective_color = material_color * light.intensity();
-    Vector4f light_vector = (light.position() - position).normalized();
+    Color effective_color = material_color * light.intensity;
+    Vector4f light_vector = (light.position - position).normalized();
     const float light_dot_normal = light_vector.dot(normal);
     Color ambient = effective_color * material.ambient;
     Color diffuse;
     Color specular;
-    if (light_dot_normal < 0 || in_shadow) {
-        diffuse = Color(0.0f, 0.0f, 0.0f);
-        specular = Color(0.0f, 0.0f, 0.0f);
+    if (light_dot_normal < 0 || intensity == 0.0) {
+        diffuse = Colors::BLACK;
+        specular = Colors::BLACK;
     } else {
-        diffuse = effective_color * material.diffuse * light_dot_normal;
+        diffuse = effective_color * material.diffuse * light_dot_normal * intensity;
         Vector4f inv_light_vector = -light_vector;
         Vector4f reflect_vector = reflect(inv_light_vector, normal);
         float reflect_dot_eye = reflect_vector.dot(eye);
         if (reflect_dot_eye <= 0) {
-            specular = Color(0.0f, 0.0f, 0.0f);
+            specular = Colors::BLACK;
         } else {
             float factor = pow(reflect_dot_eye, material.shininess);
-            specular = light.intensity() * material.specular * factor;
+            specular = light.intensity * material.specular * factor * intensity;
         }
     }
 //    std::cout << "Ambient: " << ambient << std::endl;
@@ -76,8 +82,11 @@ bool is_shadowed(const World& world, const Vector4f& light_position, const Vecto
     const Ray r = Ray(point, direction);
     const std::vector<Intersection> intersections = intersect_world(world, r);
     const auto h = hit(intersections);
-
-    return (h.t > 0) && (h.t < distance);
+    if (h.object != nullptr && h.t < distance) {
+        return true;
+    }
+    return false;
+    // return (h.t > 0) && (h.t < distance);
 }
 
 Computation prepare_computations(const Intersection& intersection, const Ray& ray, const std::vector<Intersection>& intersections) {
@@ -126,26 +135,39 @@ Computation prepare_computations(const Intersection& intersection, const Ray& ra
 }
 
 Color shade_hit(const World& world, const Computation& comps, const int remaining) {
-    // Color surface = Color(0.0f, 0.0f, 0.0f);
-    bool shadowed = is_shadowed(world, world.lights[0].position(), comps.over_point);
-//    for (PointLight& light : world.lights) {
-    Color surface =  lighting(comps.object->material, comps.object, world.lights[0], comps.over_point, comps.eyev, comps.normalv, shadowed);
-    //   }
-    Color reflected = reflected_color(world, comps, remaining);
-    Color refracted = refracted_color(world, comps, remaining);
+    Color color = Colors::BLACK;
+    for (const auto& light : world.lights) {
+        auto intensity = 0.0f;
+        if (const auto pointLight = dynamic_cast<PointLight*>(light.get())) {
+            intensity = intensity_at_pointlight(*pointLight, comps.over_point, world);
+            // std::cout << "Intensity from pointlight: " << intensity << std::endl;
+        }
+        if (const auto areaLight = dynamic_cast<AreaLight*>(light.get())) {
+            intensity = intensity_at_arealight(*areaLight, comps.over_point, world);
+            // std::cout << "Intensity from arealight: " << intensity << std::endl;
+        }
+//        const PointLight* point_light = dynamic_cast<PointLight*>(light.get());
+//        const float intensity = intensity_at_pointlight(*point_light, comps.over_point, world);
+        Color surface =  lighting(comps.object->material, comps.object, *light, comps.over_point, comps.eyev, comps.normalv, intensity);
 
-    if(comps.object->material.reflective > 0 && comps.object->material.transparency > 0) {
-        float reflectance = schlick(comps);
-        return surface + reflected * reflectance + refracted * (1 - reflectance);
+        const Color reflected = reflected_color(world, comps, remaining);
+        const Color refracted = refracted_color(world, comps, remaining);
+
+        if(comps.object->material.reflective > 0 && comps.object->material.transparency > 0) {
+            const float reflectance = schlick(comps);
+            color = color + surface + reflected * reflectance + refracted * (1 - reflectance);
+        } else {
+            color = color + surface + reflected + refracted;
+        }
     }
-    return surface + reflected + refracted;
+    return color;
 }
 
 Color color_at(const World& world, const Ray& ray, const int remaining) {
     std::vector<Intersection> intersections = intersect_world(world, ray);
     const auto intersection = hit(intersections);
     if(intersection.object == nullptr)  {
-        return Color(0.0f, 0.0f, 0.0f);
+        return Colors::BLACK;
     }
     const auto comps = prepare_computations(intersection, ray, intersections);
     return shade_hit(world, comps, remaining);
@@ -210,12 +232,53 @@ Ray ray_for_pixel(const Camera& camera, const int px, const int py) {
 
 Canvas render(const Camera& camera, const World& world) {
     Canvas image = Canvas(camera.hsize, camera.vsize);
+
     for (int y = 0; y < camera.vsize; y++) {
+        std::cerr << "\rScanlines remaining: " << camera.vsize - y <<  " " << std::flush;
         for (int x = 0; x < camera.hsize; x++) {
             Ray ray = ray_for_pixel(camera, x, y);
-            Color color = color_at(world, ray);
+            Color color = color_at(world, ray, 4);
             image.write_pixel(x, y, color);
         }
     }
     return image;
+}
+
+//  new light factory pattern
+//float intensity_at(Light* light, const Vector4f& point, const World& world) {
+////    if (const auto areaLight = dynamic_cast<AreaLight*>(light)) {
+////        return intensity_at(*areaLight, point, world);
+////    }
+//    if (const auto pointLight = dynamic_cast<PointLight*>(light)) {
+//        return intensity_at_pointlight(*pointLight, point, world);
+//    }
+//    return 0.0f;
+//}
+
+float intensity_at_pointlight(const PointLight& light, const Vector4f& point, const World& world) {
+    const bool in_shadow = is_shadowed(world, light.position, point);
+    if (in_shadow) {
+        return 0.0f;
+    }
+    return 1.0f;
+}
+
+
+Vector4f point_on_light(const AreaLight& light, const float u, const float v) {
+    return light.corner + light.uvec * (u + 0.5) + light.vvec * (v + 0.5);
+}
+
+float intensity_at_arealight(const AreaLight& light, const Vector4f& point, const World& world) {
+    float total_intensity = 0.0f;
+    for (int v = 0; v < light.vsteps; v++) {
+        for (int u = 0; u < light.usteps; u++) {
+            const Vector4f p = point_on_light(light, u, v);
+            // const float intensity = intensity_at_pointlight(light, p, world);
+            if(!is_shadowed(world, p, point)) {
+                total_intensity += 1.0f;
+            }
+            // total_intensity += intensity;
+        }
+    }
+    return total_intensity / static_cast<float>(light.samples);
 }

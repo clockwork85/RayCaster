@@ -11,18 +11,26 @@
 #include "Shape.h"
 #include "Transform.h"
 
+
+// For reference to understand push_back and emplace_back
+// https://stackoverflow.com/questions/4303513/push-back-vs-emplace-back
+
 class World {
 public:
 //    std::vector<Shape> objects{};
     std::vector<std::unique_ptr<Shape>> objects{};
-    std::vector<PointLight> lights{};
+    std::vector<std::unique_ptr<Light>> lights{};
 
     template<class ShapeType>
     void add_object(const ShapeType& object) {
         objects.emplace_back(std::make_unique<ShapeType>(object));
     }
 
-    void add_light(const PointLight& light) { lights.push_back(light); }
+    template<class LightType>
+    void add_light(const LightType& light) {
+        lights.emplace_back(std::make_unique<LightType>(light));
+    }
+
 };
 
 World default_world();

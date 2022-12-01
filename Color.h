@@ -8,16 +8,16 @@
 #include "MathUtils.h"
 
 
-class Color : public Eigen::Vector3f {
+class Color {
 public:
-    Color() : Eigen::Vector3f(0.0f, 0.0f, 0.0f) { this->r = this->x(); this->g = this->y(); this->b = this->z(); }
-    Color(float r, float g, float b) : Eigen::Vector3f(r, g, b) { this->r = r; this->g = g; this->b = b; }
-    Color(const Eigen::Vector3f& v) : Eigen::Vector3f(v) { this->r = v.x(); this->g = v.y(); this->b = v.z(); }
+    Color() : r(0.0f), g(0.0f), b(0.0f) {}
+    Color(float r, float g, float b) : r(r), g(g), b(b) {}
+    Color(const Eigen::Vector3f& v) : r(v.x()), g(v.y()), b(v.z()) {}
 
     float r, g, b;
     // Equality
     bool operator==(const Color& rhs) const {
-        return (is_equal(x(), rhs.x()) && is_equal(y(), rhs.y()) && is_equal(z(), rhs.z()));
+        return (is_equal(r, rhs.r) && is_equal(g, rhs.g) && is_equal(b, rhs.b));
     }
     // Inequality
     bool operator!=(const Color& rhs) const {
@@ -25,19 +25,24 @@ public:
     }
     // Adding
     Color operator+(const Color& rhs) const {
-        return Color(x() + rhs.x(), y() + rhs.y(), z() + rhs.z());
+        return {r + rhs.r, g + rhs.g, b + rhs.b};
     }
     // Subtracting
     Color operator-(const Color& rhs) const {
-        return Color(x() - rhs.x(), y() - rhs.y(), z() - rhs.z());
+        return {r - rhs.r, g - rhs.g, b - rhs.b};
     }
     // Multiplying by a scalar
     Color operator*(const float& scalar) const {
-        return Color(x() * scalar, y() * scalar, z() * scalar);
+        return {r * scalar, g * scalar, b * scalar};
     }
     // Multiplication
     Color operator*(const Color& rhs) const {
-        return Color(x() * rhs.x(), y() * rhs.y(), z() * rhs.z());
+        return {r * rhs.r, g * rhs.g, b * rhs.b};
+    }
+    // std::cout
+    friend std::ostream& operator<<(std::ostream& os, const Color& c) {
+        os << "Color(" << c.r << ", " << c.g << ", " << c.b << ")";
+        return os;
     }
 };
 

@@ -81,5 +81,5 @@ add_executable(RayCasterTest
         RayCaster.cpp
         Transform.cpp
         World.cpp
-        Patterns.h Cube.cpp Cube.h Cylinder.cpp Cylinder.h Cone.cpp Cone.h)
+        Patterns.h Cube.cpp Cube.h Cylinder.cpp Cylinder.h)
 target_link_libraries(RayCasterTest gtest gtest_main Eigen3::Eigen)

@@ -27,10 +27,15 @@ std::string Canvas::canvas_to_ppm() {
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             Color color = get_pixel(x, y);
+            // std::cout << "Final color from get_pixel is: " << color << " at " << x << ", " << y << std::endl;
             // Colors are stored as ints between 0 and 255
             // Negative numbers are clamped to 0
             // Numbers greater than 255 are clamped to 255
             // Round to the nearest higher integer
+//            std::cout << "Color.r: " << color.r << std::endl;
+//            std::cout << "Color.g: " << color.g << std::endl;
+//            std::cout << "Color.b: " << color.b << std::endl;
+
             int r = (int) round(color.r * 255);
             int g = (int) round(color.g * 255);
             int b = (int) round(color.b * 255);

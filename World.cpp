@@ -13,11 +13,11 @@ World default_world() {
     s1.material.specular = 0.2;
     world.objects.emplace_back(std::make_unique<Sphere>(s1));
     Sphere s2;
-    Matrix4f scale = Transform::scale(0.5, 0.5, 0.5);
-    s2.set_transform(scale);
+    s2.set_transform(Transform::scale(0.5, 0.5, 0.5));
     world.objects.emplace_back(std::make_unique<Sphere>(s2));
     // world.add_object(s2);
-    world.add_light(PointLight(create_point(-10, 10, -10), Color(1, 1, 1)));
+    PointLight light {create_point(-10, 10, -10), Color(1, 1, 1)};
+    world.lights.emplace_back(std::make_unique<PointLight>(light));
     return world;
 }
 
