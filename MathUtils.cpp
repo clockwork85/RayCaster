@@ -7,3 +7,4 @@
 bool is_equal(float a, float b, float epsilon) {
     return fabs(a - b) < epsilon;
 }
+

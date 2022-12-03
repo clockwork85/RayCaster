@@ -1915,7 +1915,7 @@ TEST(TestLights, TestLightingUsesLightIntensityToAttenuateColor) {
         EXPECT_TRUE(result == expected);
     }
 }
-
+// http://raytracerchallenge.com/bonus/area-light.html
 TEST(TestLights, TestCreatingAnAreaLight) {
     const auto corner = create_point(0, 0, 0);
     const auto v1 = create_vector(2, 0, 0);
@@ -1970,6 +1970,104 @@ TEST(TestLights, TestTheAreaLightItensityFunction) {
         EXPECT_EQ(result, exp);
     }
 }
+
+TEST(TestLights, TestANumberGeneratorReturnsACyclicSequeneceOfNumbers) {
+    std::initializer_list<float> args {0.1, 0.5, 1.0};
+    CyclicGenerator gen = CyclicGenerator(args);
+    const std::vector<float> expected {0.1, 0.5, 1.0, 0.1, 0.5, 1.0};
+    for (const auto& exp : expected) {
+        float result = gen.next();
+        EXPECT_EQ(result, exp);
+    }
+}
+
+TEST(TestLights, TestNumberGeneratorWithTwoNumbers) {
+    std::initializer_list<float> args {0.1, 0.5};
+    CyclicGenerator gen = CyclicGenerator(args);
+    const std::vector<float> expected {0.1, 0.5, 0.1, 0.5};
+    for (const auto& exp : expected) {
+        float result = gen.next();
+        EXPECT_EQ(result, exp);
+    }
+}
+
+TEST(TestLights, TestFindingASinglePointOnAJitteredAreaLight) {
+    const auto corner = create_point(0, 0, 0);
+    const auto v1 = create_vector(2, 0, 0);
+    const auto v2 = create_vector(0, 0, 1);
+    const auto intensity = Color(1, 1, 1);
+    auto light = AreaLight(corner, v1, 4, v2, 2, intensity);
+    const std::vector<std::tuple<int, int, Vector4f>> expected {
+            {0, 0, create_point(0.15, 0, 0.35)},
+            {1, 0, create_point(0.65, 0, 0.35)},
+            {0, 1, create_point(0.15, 0, 0.85)},
+            {2, 0, create_point(1.15, 0, 0.35)},
+            {3, 1, create_point(1.65, 0, 0.85)}
+    };
+    std::initializer_list<float> arg_list { 0.3, 0.7 };
+    CyclicGenerator gen = CyclicGenerator(arg_list);
+    light.set_jitter(&gen);
+    for( const auto& [u, v, exp] : expected) {
+        const auto result = point_on_light(light, u, v);
+        EXPECT_TRUE(result.isApprox(exp));
+    }
+}
+
+TEST(TestLight, TestTheAreaLightItensityFunctionWithJittering) {
+    auto world = default_world();
+    const auto corner = create_point(-0.5, -0.5, -5);
+    const auto v1 = create_vector(1, 0, 0);
+    const auto v2 = create_vector(0, 1, 0);
+    const auto intensity = Color(1, 1, 1);
+    auto light = AreaLight(corner, v1, 2, v2, 2, intensity);
+    std::initializer_list<float> arg_list { 0.7, 0.3, 0.9, 0.1, 0.5 };
+    CyclicGenerator gen = CyclicGenerator(arg_list);
+    light.set_jitter(&gen);
+    const std::vector<std::tuple<Vector4f, float>> expected{
+            {create_point(0, 0, 2),       0.0},
+            {create_point(1, -1, 2),      0.25},
+            {create_point(1.5, 0, 2),     0.75},
+            {create_point(1.25, 1.25, 3), 0.75},
+            {create_point(0, 0, -2),      1.0}
+    };
+    for( const auto& [point, exp] : expected) {
+        const auto result = intensity_at_arealight(light, point, world);
+        EXPECT_EQ(result, exp);
+    }
+}
+
+TEST(TestLights, TestRandomNumberGeneratorBetween0and1) {
+    RandomGenerator gen = RandomGenerator();
+    for (int i = 0; i < 25; i++) {
+        float result = gen.next();
+        EXPECT_GE(result, 0.0);
+        EXPECT_LE(result, 1.0);
+    }
+}
+
+//TEST(TestLights, TestLightingSamplesWithAreaLight) {
+//    const auto corner = create_point(-0.5, -0.5, -5);
+//    const auto v1 = create_vector(1, 0, 0);
+//    const auto v2 = create_vector(0, 1, 0);
+//    const auto intensity = Color(1, 1, 1);
+//    auto light = AreaLight(corner, v1, 2, v2, 2, intensity);
+//    Sphere s = Sphere();
+//    s.material.ambient = 0.1;
+//    s.material.diffuse = 0.9;
+//    s.material.specular = 0.0;
+//    s.material.color = Color(1, 1, 1);
+//    const auto eye = create_point(0, 0, -5);
+//    std::vector<std::tuple<Vector4f, Color>> expected = {
+//            {create_point(0, 0, -1), Color(0.9965, 0.9965, 0.9965)},
+//            {create_point(0, 0.7071, -0.7071), Color(0.6232, 0.6232, 0.6232)},
+//    };
+//    for (const auto& [point, exp] : expected) {
+//        const auto normalv = point.normalized();
+//        const auto eyev = (eye - point).normalized();
+//        const auto result = lighting(s.material, &s, light, point, eyev, normalv, 1.0);
+//        EXPECT_TRUE(result == exp);
+//    }
+//}
 
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);

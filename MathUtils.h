@@ -4,6 +4,8 @@
 #pragma once
 #include <Eigen/Dense>
 #include <math.h>
+#include <vector>
+#include <random>
 
 #ifndef RAYCASTER_MATHUTILS_H
 #define RAYCASTER_MATHUTILS_H
@@ -40,5 +42,8 @@ inline bool is_point(const Vector4f& v) {
 inline bool is_vector(const Vector4f& v) {
     return v.w() == 0.0f;
 }
+
+
+
 
 #endif //RAYCASTER_MATHUTILS_H

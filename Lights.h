@@ -11,6 +11,48 @@
 
 using Vector4f = Eigen::Vector4f;
 
+struct NumberGenerator {
+    virtual float next() = 0;
+//    float next() {
+//        // Cycle through the values
+//        if (index >= values.size()) {
+//            index = 0;
+//        }
+//        return values[index++];
+//    }
+
+    int index {0};
+    std::vector<float> values;
+};
+
+struct CyclicGenerator : NumberGenerator {
+    CyclicGenerator(std::initializer_list<float> list) {
+        values = std::vector<float>(list);
+    }
+    float next() override {
+        // Cycle through the values
+        if (index >= values.size()) {
+            index = 0;
+        }
+        return values[index++];
+    }
+    int index{0};
+    std::vector<float> values;
+};
+
+struct RandomGenerator : NumberGenerator {
+    RandomGenerator() {
+        std::random_device rd;
+        gen = std::mt19937(rd());
+        dis = std::uniform_real_distribution<float>(0.0, 1.0);
+    }
+    float next() override {
+        return dis(gen);
+    }
+    std::mt19937 gen;
+    std::uniform_real_distribution<float> dis;
+};
+
 struct Light {
     virtual ~Light() = default;
     Light() = delete;
@@ -53,5 +95,17 @@ public:
     const Vector4f vvec;
     const unsigned int vsteps;
     const unsigned int samples;
+    NumberGenerator *generator = nullptr;
+
+    void set_jitter(NumberGenerator *generator) {
+        this->generator = generator;
+    }
+
+    float jitter_by() const {
+        if (generator == nullptr) {
+            return 0.5f;
+        }
+        return generator->next();
+    }
 };
 #endif //RAYCASTER_LIGHTS_H

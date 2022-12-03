@@ -265,7 +265,7 @@ float intensity_at_pointlight(const PointLight& light, const Vector4f& point, co
 
 
 Vector4f point_on_light(const AreaLight& light, const float u, const float v) {
-    return light.corner + light.uvec * (u + 0.5) + light.vvec * (v + 0.5);
+    return light.corner + light.uvec * (u + light.jitter_by()) + light.vvec * (v + light.jitter_by());
 }
 
 float intensity_at_arealight(const AreaLight& light, const Vector4f& point, const World& world) {
@@ -273,10 +273,12 @@ float intensity_at_arealight(const AreaLight& light, const Vector4f& point, cons
     for (int v = 0; v < light.vsteps; v++) {
         for (int u = 0; u < light.usteps; u++) {
             const Vector4f p = point_on_light(light, u, v);
+//            std::cout << "u = " << u << " v = " << v << " p = " << p << std::endl;
             // const float intensity = intensity_at_pointlight(light, p, world);
             if(!is_shadowed(world, p, point)) {
                 total_intensity += 1.0f;
             }
+//            std::cout << "total_intensity = " << total_intensity << std::endl;
             // total_intensity += intensity;
         }
     }
