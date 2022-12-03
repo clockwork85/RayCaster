@@ -57,14 +57,21 @@ struct Light {
     virtual ~Light() = default;
     Light() = delete;
 
-    Light(const Vector4f& position, const Color& intensity) : position(position), intensity(intensity) {}
+    Light(const Vector4f& position, const Color& intensity) : position(position), intensity(intensity) { }
 
     // Equality
     inline bool operator==(const Light& rhs) const {
-        return (position == rhs.position && intensity == rhs.intensity);
+        return position == rhs.position && intensity == rhs.intensity;
     }
-
+//        for(int i = 0; i < positions.size(); i++) {
+//            if(positions[i] != rhs.positions[i]) {
+//                return false;
+//            }
+//        }
+//    }
+//
     Vector4f position{0, 0, 0, 1};
+    // std::vector<Vector4f> positions;
     Color intensity{1, 1, 1};
 };
 

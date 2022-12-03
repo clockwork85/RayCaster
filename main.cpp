@@ -143,7 +143,7 @@ int main() {
     std::cout << "World has " << world.objects.size() << " objects" << std::endl;
 //    PointLight light = PointLight(create_point(-10.0f, 10.0f, -10.0f), Color(intensity, intensity, intensity));
 //    world.add_light(light);
-    auto area = AreaLight(create_point(8.0f, 5.0f, -5.f), create_vector(1, 0, 0), 8, create_vector(0, 0, 1), 8, Color(1, 1, 1));
+    auto area = AreaLight(create_point(8.0f, 5.0f, -5.f), create_vector(1, 0, 0), 4, create_vector(0, 0, 1), 2, Color(1, 1, 1));
     RandomGenerator rand;
     area.set_jitter(&rand);
 //    PointLight area = PointLight(create_point(9.0f, 5.0f, -4.f), Color(1, 1, 1));
