@@ -49,30 +49,108 @@ Color lighting(const Material& material,
         material_color = pattern_at_object(material.pattern, shape, position);
     }
     Color effective_color = material_color * light.intensity;
-    Vector4f light_vector = (light.position - position).normalized();
-    const float light_dot_normal = light_vector.dot(normal);
+    Color sum = Colors::BLACK;
+    // for each sample on the light
     Color ambient = effective_color * material.ambient;
-    Color diffuse;
-    Color specular;
-    if (light_dot_normal < 0 || intensity == 0.0) {
-        diffuse = Colors::BLACK;
-        specular = Colors::BLACK;
-    } else {
-        diffuse = effective_color * material.diffuse * light_dot_normal * intensity;
-        Vector4f inv_light_vector = -light_vector;
-        Vector4f reflect_vector = reflect(inv_light_vector, normal);
-        float reflect_dot_eye = reflect_vector.dot(eye);
+    // Attempt to turn Light into a PointLight and if fails try an AreaLight
+    try {
+        const PointLight& pointlight = dynamic_cast<const PointLight&>(light);
+//        std::cout << "light type: " << pointlight.type << " has " << pointlight.samples << " lights with " << pointlight.positions.size() << " positions." <<  std::endl;
+        Vector4f lightv = (pointlight.position - position).normalized();
+        float light_dot_normal = lightv.dot(normal);
+        if (light_dot_normal < 0 || intensity == 0.0) {
+            return ambient;
+        }
+        Color diffuse = effective_color * material.diffuse * light_dot_normal * intensity;
+        Vector4f reflectv = reflect(-lightv, normal);
+        float reflect_dot_eye = reflectv.dot(eye);
         if (reflect_dot_eye <= 0) {
-            specular = Colors::BLACK;
-        } else {
-            float factor = pow(reflect_dot_eye, material.shininess);
-            specular = light.intensity * material.specular * factor * intensity;
+            return ambient + diffuse;
+        }
+        Color specular = light.intensity * material.specular * pow(reflect_dot_eye, material.shininess);
+        return ambient + diffuse + specular;
+    } catch (std::bad_cast& e) {
+        try {
+            AreaLight& arealight = dynamic_cast<AreaLight&>(const_cast<Light&>(light));
+            arealight.create_positions();
+//            std::cout << "LIGHT type: " << arealight.type << " has " << arealight.samples << " lights with " << arealight.positions.size() << " positions." <<  std::endl;
+            for (int i = 0; i < arealight.positions.size(); i++) {
+//                std::cout << "Sample " << i << " is at " << arealight.positions[i] << std::endl;
+                Vector4f lightv = (arealight.positions[i] - position).normalized();
+                float light_dot_normal = lightv.dot(normal);
+                if (light_dot_normal >= 0 && !is_equal(intensity, 0.0)) {
+                    // Diffuse
+                    Color diffuse = effective_color * material.diffuse * light_dot_normal;
+                    sum = sum + diffuse;
+                    // Specular
+                    Vector4f inverse_lightv = -lightv;
+                    Vector4f reflectv = reflect(inverse_lightv, normal);
+                    float reflect_dot_eye = reflectv.dot(eye);
+                    if (reflect_dot_eye > 0.0) {
+                        float factor = pow(reflect_dot_eye, material.shininess);
+                        Color specular = light.intensity * material.specular * factor;
+                        sum = sum + specular;
+                    }
+                }
+//                std::cout << "Sum after " << i << " samples: " << sum << std::endl;
+            }
+            return ambient + (sum / static_cast<float>(arealight.positions.size())) * intensity;
+        } catch (std::bad_cast& e) {
+            std::cerr << "Lighting: Light is not a PointLight or AreaLight" << std::endl;
         }
     }
+
+//
+//    for (int i = 0; i < light.samples; i++) {
+//        Vector4f lightv;
+//        if (light.type == LightType::POINT) {
+//            lightv = (light.position - position).normalized();
+//        } else if (light.type == LightType::AREA) {
+//            lightv = (light.positions[i] - position).normalized();
+//        }
+//        float light_dot_normal = lightv.dot(normal);
+//        if (light_dot_normal < 0) {
+//            sum = sum + Colors::BLACK;
+//        } else {
+//            sum = sum + effective_color * material.diffuse * light_dot_normal;
+//            Vector4f reflectv = reflect(-lightv, normal);
+//            float reflect_dot_eye = reflectv.dot(eye);
+//            if (reflect_dot_eye <= 0) {
+//                sum = sum + Colors::BLACK;
+//            } else {
+//                float factor = pow(reflect_dot_eye, material.shininess);
+//                sum = sum + light.intensity * material.specular * factor;
+//            }
+//        }
+//    }
+
+//    Vector4f light_vector = (light.position - position).normalized();
+//    const float light_dot_normal = light_vector.dot(normal);
+//    Color ambient = effective_color * material.ambient;
+//    Color diffuse;
+//    Color specular;
+//    Color sum = Colors::BLACK;
+//    for(int i = 0; i < light.samples; i++) {
+//        if (light_dot_normal < 0 || intensity == 0.0) {
+//            diffuse = Colors::BLACK;
+//            specular = Colors::BLACK;
+//        } else {
+//            diffuse = effective_color * material.diffuse * light_dot_normal * intensity;
+//            Vector4f inv_light_vector = -light_vector;
+//            Vector4f reflect_vector = reflect(inv_light_vector, normal);
+//            float reflect_dot_eye = reflect_vector.dot(eye);
+//            if (reflect_dot_eye <= 0) {
+//                specular = Colors::BLACK;
+//            } else {
+//                float factor = pow(reflect_dot_eye, material.shininess);
+//                specular = light.intensity * material.specular * factor * intensity;
+//            }
+//        }
+//    }
 //    std::cout << "Ambient: " << ambient << std::endl;
 //    std::cout << "Diffuse: " << diffuse << std::endl;
 //    std::cout << "Specular: " << specular << std::endl;
-    return ambient + diffuse + specular;
+//    return ambient + diffuse + specular;
 }
 
 bool is_shadowed(const World& world, const Vector4f& light_position, const Vector4f& point) {
@@ -136,19 +214,31 @@ Computation prepare_computations(const Intersection& intersection, const Ray& ra
 
 Color shade_hit(const World& world, const Computation& comps, const int remaining) {
     Color color = Colors::BLACK;
+    Color surface = Colors::BLACK;
     for (const auto& light : world.lights) {
+//        std::cout << "going through lights" << std::endl;
+//        std::cout << "Light position: " << light->position << std::endl;
+//        std::cout << "Light type: " << light->type << std::endl;
         auto intensity = 0.0f;
-        if (const auto pointLight = dynamic_cast<PointLight*>(light.get())) {
-            intensity = intensity_at_pointlight(*pointLight, comps.over_point, world);
-            // std::cout << "Intensity from pointlight: " << intensity << std::endl;
+        try {
+            const auto &point_light = dynamic_cast<const PointLight &>(*light);
+//            std::cout << "Light is a PointLight" << std::endl;
+            intensity = intensity_at_pointlight(point_light, comps.over_point, world);
+        } catch (std::bad_cast& e) {
+            try {
+                auto &area_light = dynamic_cast<AreaLight &>(*light);
+//                std::cout << "Light is an AreaLight" << std::endl;
+                intensity = intensity_at_arealight(area_light, comps.over_point, world);
+            } catch (std::bad_cast& e) {
+                std::cout << "Error: Light type not supported" << std::endl;
+            }
         }
-        if (const auto areaLight = dynamic_cast<AreaLight*>(light.get())) {
-            intensity = intensity_at_arealight(*areaLight, comps.over_point, world);
-            // std::cout << "Intensity from arealight: " << intensity << std::endl;
-        }
+        surface =  lighting(comps.object->material, comps.object, *light, comps.over_point, comps.eyev, comps.normalv, intensity);
+//        intensity = intensity_at_arealight(*areaLight, comps.over_point, world);
+//        std::cout << "Area light positions: " << areaLight->positions.size() << std::endl;
+//        surface =  lighting(comps.object->material, comps.object, *areaLight, comps.over_point, comps.eyev, comps.normalv, intensity);
 //        const PointLight* point_light = dynamic_cast<PointLight*>(light.get());
 //        const float intensity = intensity_at_pointlight(*point_light, comps.over_point, world);
-        Color surface =  lighting(comps.object->material, comps.object, *light, comps.over_point, comps.eyev, comps.normalv, intensity);
 
         const Color reflected = reflected_color(world, comps, remaining);
         const Color refracted = refracted_color(world, comps, remaining);
@@ -264,11 +354,13 @@ float intensity_at_pointlight(const PointLight& light, const Vector4f& point, co
 }
 
 
-Vector4f point_on_light(const AreaLight& light, const float u, const float v) {
-    return light.corner + light.uvec * (u + light.jitter_by()) + light.vvec * (v + light.jitter_by());
+Vector4f point_on_light(AreaLight& light, const float u, const float v) {
+    Vector4f pt = light.corner + light.uvec * (u + light.jitter_by()) + light.vvec * (v + light.jitter_by());
+    light.positions.push_back(pt);
+    return pt;
 }
 
-float intensity_at_arealight(const AreaLight& light, const Vector4f& point, const World& world) {
+float intensity_at_arealight(AreaLight& light, const Vector4f& point, const World& world) {
     float total_intensity = 0.0f;
     for (int v = 0; v < light.vsteps; v++) {
         for (int u = 0; u < light.usteps; u++) {
@@ -283,4 +375,16 @@ float intensity_at_arealight(const AreaLight& light, const Vector4f& point, cons
         }
     }
     return total_intensity / static_cast<float>(light.samples);
+}
+
+std::ostream& operator<<(std::ostream& os, const LightType& type){
+    switch(type) {
+        case LightType::POINT:
+             os << "POINT";
+             break;
+        case LightType::AREA:
+             os << "AREA";
+             break;
+    }
+    return os;
 }

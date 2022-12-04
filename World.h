@@ -30,7 +30,6 @@ public:
     void add_light(const LightType& light) {
         lights.emplace_back(std::make_unique<LightType>(light));
     }
-
 };
 
 World default_world();

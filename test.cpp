@@ -1937,7 +1937,7 @@ TEST(TestLights, TestFindingASinglePointOnaAnAreaLight) {
     const auto v1 = create_vector(2, 0, 0);
     const auto v2 = create_vector(0, 0, 1);
     const auto intensity = Color(1, 1, 1);
-    const auto light = AreaLight(corner, v1, 4, v2, 2, intensity);
+    auto light = AreaLight(corner, v1, 4, v2, 2, intensity);
     const std::vector<std::tuple<int, int, Vector4f>> expected {
             {0, 0, create_point(0.25, 0, 0.25)},
             {1, 0, create_point(0.75, 0, 0.25)},
@@ -1957,7 +1957,7 @@ TEST(TestLights, TestTheAreaLightItensityFunction) {
     const auto v1 = create_vector(1, 0, 0);
     const auto v2 = create_vector(0, 1, 0);
     const auto intensity = Color(1, 1, 1);
-    const auto light = AreaLight(corner, v1, 2, v2, 2, intensity);
+    auto light = AreaLight(corner, v1, 2, v2, 2, intensity);
     const std::vector<std::tuple<Vector4f, float>> expected{
             {create_point(0, 0, 2),       0.0},
             {create_point(1, -1, 2),      0.25},
@@ -2045,29 +2045,31 @@ TEST(TestLights, TestRandomNumberGeneratorBetween0and1) {
     }
 }
 
-//TEST(TestLights, TestLightingSamplesWithAreaLight) {
-//    const auto corner = create_point(-0.5, -0.5, -5);
-//    const auto v1 = create_vector(1, 0, 0);
-//    const auto v2 = create_vector(0, 1, 0);
-//    const auto intensity = Color(1, 1, 1);
-//    auto light = AreaLight(corner, v1, 2, v2, 2, intensity);
-//    Sphere s = Sphere();
-//    s.material.ambient = 0.1;
-//    s.material.diffuse = 0.9;
-//    s.material.specular = 0.0;
-//    s.material.color = Color(1, 1, 1);
-//    const auto eye = create_point(0, 0, -5);
-//    std::vector<std::tuple<Vector4f, Color>> expected = {
-//            {create_point(0, 0, -1), Color(0.9965, 0.9965, 0.9965)},
-//            {create_point(0, 0.7071, -0.7071), Color(0.6232, 0.6232, 0.6232)},
-//    };
-//    for (const auto& [point, exp] : expected) {
-//        const auto normalv = point.normalized();
-//        const auto eyev = (eye - point).normalized();
-//        const auto result = lighting(s.material, &s, light, point, eyev, normalv, 1.0);
-//        EXPECT_TRUE(result == exp);
-//    }
-//}
+TEST(TestLights, TestLightingSamplesWithAreaLight) {
+    const auto corner = create_point(-0.5, -0.5, -5);
+    const auto v1 = create_vector(1, 0, 0);
+    const auto v2 = create_vector(0, 1, 0);
+    const auto intensity = Color(1, 1, 1);
+    auto light = AreaLight(corner, v1, 2, v2, 2, intensity);
+    Sphere s = Sphere();
+    s.material.ambient = 0.1;
+    s.material.diffuse = 0.9;
+    s.material.specular = 0.0;
+    s.material.color = Color(1, 1, 1);
+    const auto eye = create_point(0, 0, -5);
+    std::vector<std::tuple<Vector4f, Color>> expected = {
+            {create_point(0, 0, -1), Color(0.9965, 0.9965, 0.9965)},
+            {create_point(0, 0.7071, -0.7071), Color(0.6232, 0.6232, 0.6232)},
+    };
+    for (const auto& [point, exp] : expected) {
+        const auto normalv = create_vector(point.x(), point.y(), point.z()).normalized();
+        const auto eyev = (eye - point).normalized();
+        const auto result = lighting(s.material, &s, light, point, eyev, normalv, 1.0);
+        std::cout << "Result: " << result << std::endl;
+        std::cout << "Expected: " << exp << std::endl;
+        EXPECT_TRUE(result == exp);
+    }
+}
 
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);

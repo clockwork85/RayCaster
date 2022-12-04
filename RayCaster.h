@@ -40,9 +40,10 @@ Canvas render(const Camera& camera, const World& world);
 
 // float intensity_at(const Light* light,      const Vector4f& point, const World& world);
 float intensity_at_pointlight(const PointLight& light, const Vector4f& point, const World& world);
-float intensity_at_arealight(const AreaLight& light, const Vector4f& point, const World& world);
-Vector4f point_on_light(const AreaLight& light, const float u, const float v);
+float intensity_at_arealight(AreaLight& light, const Vector4f& point, const World& world);
+Vector4f point_on_light(AreaLight& light, const float u, const float v);
 
-
+// ostream for LightType
+std::ostream& operator<<(std::ostream& os, const LightType& type);
 
 #endif //RAYCASTER_RAYCASTER_H

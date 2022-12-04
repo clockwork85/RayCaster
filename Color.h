@@ -39,6 +39,10 @@ public:
     Color operator*(const Color& rhs) const {
         return {r * rhs.r, g * rhs.g, b * rhs.b};
     }
+    // Division
+    Color operator/(const float& scalar) const {
+        return {r / scalar, g / scalar, b / scalar};
+    }
     // std::cout
     friend std::ostream& operator<<(std::ostream& os, const Color& c) {
         os << "Color(" << c.r << ", " << c.g << ", " << c.b << ")";

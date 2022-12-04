@@ -8,8 +8,16 @@
 #include <Eigen/Core>
 #include "Color.h"
 #include "MathUtils.h"
+#include <array>
 
 using Vector4f = Eigen::Vector4f;
+
+enum class LightType {
+    POINT,
+    AREA
+};
+
+
 
 struct NumberGenerator {
     virtual float next() = 0;
@@ -71,12 +79,19 @@ struct Light {
 //    }
 //
     Vector4f position{0, 0, 0, 1};
-    // std::vector<Vector4f> positions;
     Color intensity{1, 1, 1};
+    const unsigned int samples {0};
+    const LightType type { LightType::POINT };
+    std::vector<Vector4f> positions {};
 };
 
 struct PointLight : public Light {
-    PointLight(const Vector4f &position, const Color &intensity) : Light(position, intensity) {}
+    PointLight(const Vector4f &position, const Color &intensity) : Light(position, intensity) {
+
+    }
+    const unsigned int samples { 1 };
+    const LightType type { LightType::POINT };
+    std::vector<Vector4f> positions { position };
 };
 
 // http://raytracerchallenge.com/bonus/area-light.html
@@ -94,7 +109,8 @@ public:
                                         usteps(usteps),
                                         vvec(full_vvec / static_cast<float>(vsteps)),
                                         vsteps(vsteps),
-                                        samples(usteps * vsteps) {}
+                                        samples(usteps * vsteps) {
+    }
 
     const Vector4f corner;
     const Vector4f uvec;
@@ -102,7 +118,9 @@ public:
     const Vector4f vvec;
     const unsigned int vsteps;
     const unsigned int samples;
+    const LightType type = LightType::AREA;
     NumberGenerator *generator = nullptr;
+    std::vector<Vector4f> positions;
 
     void set_jitter(NumberGenerator *generator) {
         this->generator = generator;
@@ -114,5 +132,19 @@ public:
         }
         return generator->next();
     }
+    void create_positions() {
+        positions.clear();
+        for (int i = 0; i < usteps; i++) {
+            for (int j = 0; j < vsteps; j++) {
+                Vector4f pt = corner + uvec * (i + 0.5f) + vvec * (j + 0.5f);
+                positions.push_back(pt);
+            }
+        }
+    }
 };
+
+
+//Vector4f pt = light.corner + light.uvec * (u + light.jitter_by()) + light.vvec * (v + light.jitter_by());
+
+
 #endif //RAYCASTER_LIGHTS_H
