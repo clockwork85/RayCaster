@@ -57,9 +57,17 @@ struct RandomGenerator : NumberGenerator {
     float next() override {
         return dis(gen);
     }
+
+    float random_rng(const float min, const float max) {
+        std::uniform_real_distribution<float> dis(min, max);
+        return dis(gen);
+    }
+
     std::mt19937 gen;
     std::uniform_real_distribution<float> dis;
 };
+
+
 
 struct Light {
     virtual ~Light() = default;

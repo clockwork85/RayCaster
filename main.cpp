@@ -45,8 +45,8 @@ float random_float() {
 
 int main() {
 
-    int height = 1000;
-    int width = 500;
+    int height = 500;
+    int width = 250;
 
     auto floor = Plane();
 //    floor.material.color = Color(1, 0.9, 0.9);
@@ -143,10 +143,10 @@ int main() {
     std::cout << "World has " << world.objects.size() << " objects" << std::endl;
 //    PointLight light = PointLight(create_point(-10.0f, 10.0f, -10.0f), Color(intensity, intensity, intensity));
 //    world.add_light(light);
-    auto area = AreaLight(create_point(8.0f, 5.0f, -5.f), create_vector(1, 0, 0), 8, create_vector(0, 0, 1), 8, Color(1, 1, 1));
+    auto area = AreaLight(create_point(8.0f, 5.0f, -5.f), create_vector(1, 0, 0), 2, create_vector(0, 0, 1), 2, Color(1, 1, 1));
     RandomGenerator rand;
     area.set_jitter(&rand);
-    //PointLight area = PointLight(create_point(8.0f, 5.0f, -5.f), Color(1, 1, 1));
+//    PointLight area = PointLight(create_point(8.0f, 5.0f, -5.f), Color(1, 1, 1));
     //  PointLight light2 = PointLight(create_point(10.0f, 100.f, -10.f), Color(intensity, intensity, intensity));
     world.add_light(area);
     std::cout << "World has " << world.lights.size() << " lights" << std::endl;
@@ -155,8 +155,8 @@ int main() {
     Camera camera(height, width, M_PI / 3.0f);
     camera.transform = Transform::view_transform(create_point(0.0f, 1.5f, -5.0f), create_point(0.0f, 1.0f, 0.0f), create_vector(0.0f, 1.0f, 0.0f));
 
-    Canvas canvas = render(camera, world);
-    canvas.save_to_file("test.ppm");
+    Canvas canvas = render_stratified_jittering(camera, world);
+    canvas.save_to_file("test_AL_aa.ppm");
 
     return 0;
 }

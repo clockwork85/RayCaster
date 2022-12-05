@@ -3,7 +3,7 @@
 //
 #pragma once
 #include <Eigen/Dense>
-#include <math.h>
+#include <cmath>
 #include <vector>
 #include <random>
 
@@ -13,7 +13,7 @@
 using Vector3f = Eigen::Vector3f;
 using Vector4f = Eigen::Vector4f;
 
-constexpr float EPSILON = 0.001f;
+constexpr float EPSILON = 0.0001f;
 
 bool is_equal(float a, float b, float epsilon = EPSILON);
 

@@ -45,7 +45,7 @@ Color lighting(const Material& material,
                const Vector4f& normal,
                const float intensity) {
     Color material_color = material.color;
-    if(material.pattern != nullptr) {
+    if (material.pattern != nullptr) {
         material_color = pattern_at_object(material.pattern, shape, position);
     }
     Color effective_color = material_color * light.intensity;
@@ -54,7 +54,7 @@ Color lighting(const Material& material,
     Color ambient = effective_color * material.ambient;
     // Attempt to turn Light into a PointLight and if fails try an AreaLight
     try {
-        const PointLight& pointlight = dynamic_cast<const PointLight&>(light);
+        const PointLight &pointlight = dynamic_cast<const PointLight &>(light);
 //        std::cout << "light type: " << pointlight.type << " has " << pointlight.samples << " lights with " << pointlight.positions.size() << " positions." <<  std::endl;
         Vector4f lightv = (pointlight.position - position).normalized();
         float light_dot_normal = lightv.dot(normal);
@@ -69,9 +69,9 @@ Color lighting(const Material& material,
         }
         Color specular = light.intensity * material.specular * pow(reflect_dot_eye, material.shininess);
         return ambient + diffuse + specular;
-    } catch (std::bad_cast& e) {
+    } catch (std::bad_cast &e) {
         try {
-            AreaLight& arealight = dynamic_cast<AreaLight&>(const_cast<Light&>(light));
+            AreaLight &arealight = dynamic_cast<AreaLight &>(const_cast<Light &>(light));
             arealight.create_positions();
 //            std::cout << "LIGHT type: " << arealight.type << " has " << arealight.samples << " lights with " << arealight.positions.size() << " positions." <<  std::endl;
             for (int i = 0; i < arealight.positions.size(); i++) {
@@ -95,11 +95,12 @@ Color lighting(const Material& material,
 //                std::cout << "Sum after " << i << " samples: " << sum << std::endl;
             }
             return ambient + (sum / static_cast<float>(arealight.positions.size())) * intensity;
-        } catch (std::bad_cast& e) {
+        } catch (std::bad_cast &e) {
             std::cerr << "Lighting: Light is not a PointLight or AreaLight" << std::endl;
         }
     }
-
+    return Color(-1, -1, -1);
+}
 //
 //    for (int i = 0; i < light.samples; i++) {
 //        Vector4f lightv;
@@ -151,7 +152,7 @@ Color lighting(const Material& material,
 //    std::cout << "Diffuse: " << diffuse << std::endl;
 //    std::cout << "Specular: " << specular << std::endl;
 //    return ambient + diffuse + specular;
-}
+// }
 
 bool is_shadowed(const World& world, const Vector4f& light_position, const Vector4f& point) {
     const Vector4f v = light_position - point;
@@ -309,13 +310,14 @@ float schlick(const Computation& comps) {
     return r0 + (1.0f - r0) * pow((1.0f - cos), 5.0f);
 }
 
-Ray ray_for_pixel(const Camera& camera, const int px, const int py) {
-    float xoffset = (px + 0.5f) * camera.pixel_size;
-    float yoffset = (py + 0.5f) * camera.pixel_size;
+Ray ray_for_pixel(const Camera& camera, const int px, const int py, const float x_offset, const float y_offset) {
+    float xoffset = (px + x_offset) * camera.pixel_size;
+    float yoffset = (py + y_offset) * camera.pixel_size;
     float world_x = camera.half_width - xoffset;
     float world_y = camera.half_height - yoffset;
-    Vector4f pixel = camera.transform.inverse() * create_point(world_x, world_y, -1.0f);
-    Vector4f origin = camera.transform.inverse() * create_point(0.0f, 0.0f, 0.0f);
+    Matrix4f camera_inverse = camera.transform.inverse();
+    Vector4f pixel = camera_inverse * create_point(world_x, world_y, -1.0f);
+    Vector4f origin = camera_inverse * create_point(0.0f, 0.0f, 0.0f);
     Vector4f direction = (pixel - origin).normalized();
     return Ray(origin, direction);
 }
@@ -326,13 +328,90 @@ Canvas render(const Camera& camera, const World& world) {
     for (int y = 0; y < camera.vsize; y++) {
         std::cerr << "\rScanlines remaining: " << camera.vsize - y <<  " " << std::flush;
         for (int x = 0; x < camera.hsize; x++) {
-            Ray ray = ray_for_pixel(camera, x, y);
+            const float px = x + 0.5f;
+            const float py = y + 0.5f;
+            Ray ray = ray_for_pixel(camera, px, py);
             Color color = color_at(world, ray, 4);
             image.write_pixel(x, y, color);
         }
     }
     return image;
 }
+
+Canvas render_stratified_jittering(const Camera& camera, const World& world) {
+    Canvas image = Canvas(camera.hsize, camera.vsize);
+    // Subdivide the pixel into subpixels
+    const int subpixels = 9;
+    const float subpixel_size = 1.0f / subpixels;
+    const float subpixel_offset = subpixel_size / 2.0f;
+    RandomGenerator gen = RandomGenerator();
+    for (int y = 0; y < camera.vsize; y++) {
+        std::cerr << "\rScanlines remaining: " << camera.vsize - y <<  " " << std::flush;
+        for (int x = 0; x < camera.hsize; x++) {
+            Color color = Colors::BLACK;
+            for (int sub_y = 0; sub_y < subpixels; sub_y++) {
+                for (int sub_x = 0; sub_x < subpixels; sub_x++) {
+                    const float x_offset = (sub_x * subpixel_size) + subpixel_offset + gen.random_rng(-subpixel_offset, subpixel_offset);
+                    const float y_offset = (sub_y * subpixel_size) + subpixel_offset + gen.random_rng(-subpixel_offset, subpixel_offset);
+                    Ray ray = ray_for_pixel(camera, x, y, x_offset, y_offset);
+                    color = color + color_at(world, ray, 4);
+                }
+            }
+            color = color / (subpixels * subpixels);
+            image.write_pixel(x, y, color);
+        }
+    }
+    return image;
+}
+
+Canvas render_aa(const Camera& camera, const World& world) {
+    Canvas image = Canvas(camera.hsize, camera.vsize);
+    const int samples = 10;
+    const float offset = 1.0f / (samples * 2.0f);
+    RandomGenerator gen = RandomGenerator();
+    for (int y = 0; y < camera.vsize; y++) {
+        std::cerr << "\rScanlines remaining: " << camera.vsize - y <<  " " << std::flush;
+        for (int x = 0; x < camera.hsize; x++) {
+            Color color = Colors::BLACK;
+            for (int i = 0; i < samples; i++) {
+                for (int j = 0; j < samples; j++) {
+                    const float x_offset = (i * 2 + 1) * offset;
+                    const float y_offset = (j * 2 + 1) * offset;
+                    Ray ray = ray_for_pixel(camera, x, y, x_offset, y_offset);
+                    color = color + color_at(world, ray, 4);
+                }
+            }
+            color = color / (samples * samples);
+            image.write_pixel(x, y, color);
+        }
+    }
+    return image;
+}
+
+Canvas render_whitted_norecurs(const Camera& camera, const World& world) {
+    Canvas image = Canvas(camera.hsize, camera.vsize);
+//    RandomGenerator gen = RandomGeneratorRng(0.333f, 0.666f);
+    for (int y = 0; y < camera.vsize; y++) {
+        std::cerr << "\rScanlines remaining: " << camera.vsize - y <<  " " << std::flush;
+        for (int x = 0; x < camera.hsize; x++) {
+            // 4 corners of pixel for antialiasing sum of 5 ray
+            Color sum = Colors::BLACK;
+            for (int i = 0; i < 5; i++) {
+                const float px = x + 0.25f + 0.5f * (i % 2);
+                const float py = y + 0.25f + 0.5f * (i / 2);
+                Ray ray = ray_for_pixel(camera, px, py);
+                Color color = color_at(world, ray, 4);
+                sum = sum + color;
+            }
+            Color color = sum / 5.0f;
+//            std::cout << "Color at pixel " << x << ", " << y << " is " << color << std::endl;
+            image.write_pixel(x, y, color);
+        }
+    }
+    return image;
+}
+
+
 
 //  new light factory pattern
 //float intensity_at(Light* light, const Vector4f& point, const World& world) {
@@ -354,13 +433,12 @@ float intensity_at_pointlight(const PointLight& light, const Vector4f& point, co
 }
 
 
-Vector4f point_on_light(AreaLight& light, const float u, const float v) {
-    Vector4f pt = light.corner + light.uvec * (u + light.jitter_by()) + light.vvec * (v + light.jitter_by());
-    light.positions.push_back(pt);
-    return pt;
+Vector4f point_on_light(const AreaLight& light, const float u, const float v) {
+    return light.corner + light.uvec * (u + light.jitter_by()) + light.vvec * (v + light.jitter_by());
+    // return pt;
 }
 
-float intensity_at_arealight(AreaLight& light, const Vector4f& point, const World& world) {
+float intensity_at_arealight(const AreaLight& light, const Vector4f& point, const World& world) {
     float total_intensity = 0.0f;
     for (int v = 0; v < light.vsteps; v++) {
         for (int u = 0; u < light.usteps; u++) {

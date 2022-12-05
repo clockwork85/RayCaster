@@ -35,13 +35,16 @@ Color color_at(const World& world, const Ray& ray, const int remaining=4);
 Color reflected_color(const World& world, const Computation& comps, const int remaining=4);
 Color refracted_color(const World& world, const Computation& comps, const int remaining=4);
 float schlick(const Computation& comps);
-Ray ray_for_pixel(const Camera& camera, const int px, const int py);
+Ray ray_for_pixel(const Camera& camera, const int px, const int py, const float x_offset=0.0f, const float y_offset=0.0f);
 Canvas render(const Camera& camera, const World& world);
+Canvas render_whitted_norecurs(const Camera& camera, const World& world);
+Canvas render_stratified_jittering(const Camera& camera, const World& world);
+Canvas render_aa(const Camera& camera, const World& world);
 
 // float intensity_at(const Light* light,      const Vector4f& point, const World& world);
 float intensity_at_pointlight(const PointLight& light, const Vector4f& point, const World& world);
-float intensity_at_arealight(AreaLight& light, const Vector4f& point, const World& world);
-Vector4f point_on_light(AreaLight& light, const float u, const float v);
+float intensity_at_arealight(const AreaLight& light, const Vector4f& point, const World& world);
+Vector4f point_on_light(const AreaLight& light, const float u, const float v);
 
 // ostream for LightType
 std::ostream& operator<<(std::ostream& os, const LightType& type);

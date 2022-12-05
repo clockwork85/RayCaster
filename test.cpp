@@ -1079,24 +1079,31 @@ TEST(TestWorld, TestThePixelSizeForAHorizontalCanvas) {
 
 TEST(TestWorld, TestConstructARayThroughCenterOfCanvas) {
     Camera c = Camera(201, 101, M_PI / 2);
-    Ray r = ray_for_pixel(c, 100, 50);
+    const float px = 100 + 0.5f;
+    const float py = 50 + 0.5f;
+    Ray r = ray_for_pixel(c, px, py);
     EXPECT_TRUE(r.origin == create_point(0, 0, 0));
-    EXPECT_TRUE(r.direction.isApprox(create_vector(0, 0, -1)));
+    EXPECT_TRUE(r.direction.isApprox(create_vector(0, 0, -1), 0.01));
 }
 
 TEST(TestWorld, TestConstructARayThroughTheCornerOfCanvas) {
     Camera c = Camera(201, 101, M_PI / 2);
-    Ray r = ray_for_pixel(c, 0, 0);
+    const float px = 0 + 0.5f;
+    const float py = 0 + 0.5f;
+    Ray r = ray_for_pixel(c, px, py);
+//    std::cout << "Ray: " << r.origin << " " << r.direction << std::endl;
     EXPECT_TRUE(r.origin == create_point(0, 0, 0));
-    EXPECT_TRUE(r.direction.isApprox(create_vector(0.66519, 0.33259, -0.66851)));
+    EXPECT_TRUE(r.direction.isApprox(create_vector(0.66519, 0.33259, -0.66851), 0.01));
 }
 
 TEST(TestWorld, TestConstructARayWhenTheCameraIsTransformed) {
     Camera c = Camera(201, 101, M_PI / 2);
     c.transform = Transform::rotate_y(M_PI / 4) * Transform::translate(0, -2, 5);
-    Ray r = ray_for_pixel(c, 100, 50);
+    const float px = 100 + 0.5f;
+    const float py = 50 + 0.5f;
+    Ray r = ray_for_pixel(c, px, py);
     EXPECT_TRUE(r.origin.isApprox(create_point(0, 2, -5)));
-    EXPECT_TRUE(r.direction.isApprox(create_vector(sqrt(2) / 2, 0, -sqrt(2) / 2)));
+    EXPECT_TRUE(r.direction.isApprox(create_vector(sqrt(2) / 2, 0, -sqrt(2) / 2), 0.01));
 }
 
 //TEST(TestShadows, TestLightingSurfaceInShadow) {
@@ -2065,8 +2072,6 @@ TEST(TestLights, TestLightingSamplesWithAreaLight) {
         const auto normalv = create_vector(point.x(), point.y(), point.z()).normalized();
         const auto eyev = (eye - point).normalized();
         const auto result = lighting(s.material, &s, light, point, eyev, normalv, 1.0);
-        std::cout << "Result: " << result << std::endl;
-        std::cout << "Expected: " << exp << std::endl;
         EXPECT_TRUE(result == exp);
     }
 }
