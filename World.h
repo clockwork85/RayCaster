@@ -33,6 +33,7 @@ public:
 };
 
 World default_world();
+World cornell_box();
 
 
 #endif //RAYCASTER_WORLD_H

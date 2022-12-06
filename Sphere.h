@@ -19,7 +19,7 @@ struct Sphere : public Shape {
 
 inline Sphere glass_sphere() {
     Sphere s;
-    s.set_material(glass());
+    s.set_material(glass);
     return s;
 }
 

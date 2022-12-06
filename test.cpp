@@ -2,10 +2,14 @@
 // Created by Bray, Matthew D ERDC-RDE-GSL-MS CIV on 11/11/22.
 //
 
+#include "assimp/Importer.hpp"
+#include "assimp/scene.h"
+#include "assimp/postprocess.h"
 #include <gtest/gtest.h>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include "MathUtils.h"
+#include "Mesh.h"
 #include "Camera.h"
 #include "Canvas.h"
 #include "Color.h"
@@ -19,6 +23,7 @@
 #include "RayCaster.h"
 #include "Sphere.h"
 #include "Transform.h"
+#include "Triangle.h"
 #include "World.h"
 
 using Vector3f = Eigen::Vector3f;
@@ -2075,6 +2080,86 @@ TEST(TestLights, TestLightingSamplesWithAreaLight) {
         EXPECT_TRUE(result == exp);
     }
 }
+
+TEST(TestTris, TestConstructingATriangle) {
+    const auto p1 = create_point(0, 1, 0);
+    const auto p2 = create_point(-1, 0, 0);
+    const auto p3 = create_point(1, 0, 0);
+    const auto t = Triangle(p1, p2, p3);
+    EXPECT_TRUE(t.p1.isApprox(p1));
+    EXPECT_TRUE(t.p2.isApprox(p2));
+    EXPECT_TRUE(t.p3.isApprox(p3));
+    EXPECT_TRUE(t.e1.isApprox(create_vector(-1, -1, 0)));
+    EXPECT_TRUE(t.e2.isApprox(create_vector(1, -1, 0)));
+    EXPECT_TRUE(t.normal.isApprox(create_vector(0, 0, -1)));
+}
+
+TEST(TestTris, TestFindingTheNormalOnATriangle) {
+    const auto t = Triangle(create_point(0, 1, 0), create_point(-1, 0, 0), create_point(1, 0, 0));
+    const std::vector<std::tuple<Vector4f, Vector4f>> expected {
+            {create_point(0, 0.5, 0), create_vector(0, 0, -1)},
+            {create_point(-0.5, 0.75, 0), create_vector(0, 0, -1)},
+            {create_point(0.5, 0.25, 0), create_vector(0, 0, -1)}
+    };
+    for (const auto& [point, exp] : expected) {
+        const auto result = t.local_normal_at(point);
+        EXPECT_TRUE(result.isApprox(exp));
+    }
+}
+
+TEST(TestTris, TestIntersectingARayParallelToTheTriangle) {
+    const auto t = Triangle(create_point(0, 1, 0), create_point(-1, 0, 0), create_point(1, 0, 0));
+    const auto r = Ray(create_point(0, -1, -2), create_vector(0, 1, 0));
+    const auto xs = t.local_intersect(r);
+    EXPECT_EQ(xs.size(), 0);
+}
+
+TEST(TestTris, TestARayMissesTheP1P3Edge) {
+    const auto t = Triangle(create_point(0, 1, 0), create_point(-1, 0, 0), create_point(1, 0, 0));
+    const auto r = Ray(create_point(1, 1, -2), create_vector(0, 0, 1));
+    const auto xs = t.local_intersect(r);
+    EXPECT_EQ(xs.size(), 0);
+}
+
+TEST(TestTris, TestARayMissesTheP1P2Edge) {
+    const auto t = Triangle(create_point(0, 1, 0), create_point(-1, 0, 0), create_point(1, 0, 0));
+    const auto r = Ray(create_point(-1, 1, -2), create_vector(0, 0, 1));
+    const auto xs = t.local_intersect(r);
+    EXPECT_EQ(xs.size(), 0);
+}
+
+TEST(TestTris, TestARayMissesTheP2P3Edge) {
+    const auto t = Triangle(create_point(0, 1, 0), create_point(-1, 0, 0), create_point(1, 0, 0));
+    const auto r = Ray(create_point(0, -1, -2), create_vector(0, 0, 1));
+    const auto xs = t.local_intersect(r);
+    EXPECT_EQ(xs.size(), 0);
+}
+
+TEST(TestTris, TestARayStrikesATriangle) {
+    const auto t = Triangle(create_point(0, 1, 0), create_point(-1, 0, 0), create_point(1, 0, 0));
+    const auto r = Ray(create_point(0, 0.5, -2), create_vector(0, 0, 1));
+    const auto xs = t.local_intersect(r);
+    EXPECT_EQ(xs.size(), 1);
+    EXPECT_EQ(xs[0].t, 2);
+}
+
+TEST(TestTris, TestObjFileWithTriangleData) {
+    Assimp::Importer importer;
+    const auto scene = importer.ReadFile("../face.obj", aiProcess_Triangulate);
+    if( !scene) {
+        FAIL() << "Failed to load file: " << importer.GetErrorString();
+    }
+    EXPECT_TRUE(scene->HasMeshes());
+}
+
+TEST(TestTris, TestTriangulatingPolygons) {
+    // Get the vertices from scene
+    Mesh mesh = Mesh();
+    mesh.load_mesh("../face.obj");
+    EXPECT_EQ(mesh.triangles.size(), 2);
+}
+
+
 
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);

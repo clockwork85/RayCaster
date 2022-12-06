@@ -61,6 +61,7 @@ struct Shape
 
     [[nodiscard]] virtual std::vector<Intersection> local_intersect(const Ray& r) const = 0;
 
+
     const int id{shape_count++};
     Material material;
 
