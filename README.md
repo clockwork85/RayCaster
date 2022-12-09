@@ -293,3 +293,5 @@ Canvas render_stratified_jittering(const Camera& camera, const World& world, con
     return image;
 }
 ```
+### Final Render
+![Final Render](bunny_hr_al_sj_500.png)
