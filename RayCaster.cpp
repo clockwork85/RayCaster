@@ -174,7 +174,7 @@ Computation prepare_computations(const Intersection& intersection, const Ray& ra
     comps.point = ray.position(comps.t);
     comps.object = intersection.object;
     comps.eyev = -ray.direction;
-    comps.normalv = comps.object->normal_at(comps.point);
+    comps.normalv = comps.object->normal_at(comps.point, intersection);
     if (comps.normalv.dot(comps.eyev) < 0) {
         comps.inside = true;
         comps.normalv = -comps.normalv;
@@ -338,21 +338,24 @@ Canvas render(const Camera& camera, const World& world) {
     return image;
 }
 
-Canvas render_stratified_jittering(const Camera& camera, const World& world) {
+Canvas render_stratified_jittering(const Camera& camera, const World& world, const bool multiprocessing) {
     Canvas image = Canvas(camera.hsize, camera.vsize);
     // Subdivide the pixel into subpixels
     const int subpixels = 9;
     const float subpixel_size = 1.0f / subpixels;
     const float subpixel_offset = subpixel_size / 2.0f;
     RandomGenerator gen = RandomGenerator();
+    std::cout << "Running on single processor" << std::endl;
     for (int y = 0; y < camera.vsize; y++) {
-        std::cerr << "\rScanlines remaining: " << camera.vsize - y <<  " " << std::flush;
+        std::cerr << "\rScanlines remaining: " << camera.vsize - y << " " << std::flush;
         for (int x = 0; x < camera.hsize; x++) {
             Color color = Colors::BLACK;
             for (int sub_y = 0; sub_y < subpixels; sub_y++) {
                 for (int sub_x = 0; sub_x < subpixels; sub_x++) {
-                    const float x_offset = (sub_x * subpixel_size) + subpixel_offset + gen.random_rng(-subpixel_offset, subpixel_offset);
-                    const float y_offset = (sub_y * subpixel_size) + subpixel_offset + gen.random_rng(-subpixel_offset, subpixel_offset);
+                    const float x_offset = (sub_x * subpixel_size) + subpixel_offset +
+                                           gen.random_rng(-subpixel_offset, subpixel_offset);
+                    const float y_offset = (sub_y * subpixel_size) + subpixel_offset +
+                                           gen.random_rng(-subpixel_offset, subpixel_offset);
                     Ray ray = ray_for_pixel(camera, x, y, x_offset, y_offset);
                     color = color + color_at(world, ray, 4);
                 }
@@ -367,21 +370,18 @@ Canvas render_stratified_jittering(const Camera& camera, const World& world) {
 Canvas render_aa(const Camera& camera, const World& world) {
     Canvas image = Canvas(camera.hsize, camera.vsize);
     const int samples = 10;
-    const float offset = 1.0f / (samples * 2.0f);
     RandomGenerator gen = RandomGenerator();
     for (int y = 0; y < camera.vsize; y++) {
         std::cerr << "\rScanlines remaining: " << camera.vsize - y <<  " " << std::flush;
         for (int x = 0; x < camera.hsize; x++) {
             Color color = Colors::BLACK;
             for (int i = 0; i < samples; i++) {
-                for (int j = 0; j < samples; j++) {
-                    const float x_offset = (i * 2 + 1) * offset;
-                    const float y_offset = (j * 2 + 1) * offset;
-                    Ray ray = ray_for_pixel(camera, x, y, x_offset, y_offset);
-                    color = color + color_at(world, ray, 4);
-                }
+                const float x_offset = gen.next(); // value between 0 - 1
+                const float y_offset = gen.next();
+                Ray ray = ray_for_pixel(camera, x, y, x_offset, y_offset);
+                color = color + color_at(world, ray, 4);
             }
-            color = color / (samples * samples);
+            color = color / samples;
             image.write_pixel(x, y, color);
         }
     }

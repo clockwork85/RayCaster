@@ -8,7 +8,7 @@
 //using Vector4f = Eigen::Vector4f;
 //using Matrix4f = Eigen::Matrix4f;
 
-Vector4f Sphere::local_normal_at(const Vector4f& local_point) const {
+Vector4f Sphere::local_normal_at(const Vector4f& local_point, const Intersection& i) const {
     return local_point - create_point(0, 0, 0);
 }
 

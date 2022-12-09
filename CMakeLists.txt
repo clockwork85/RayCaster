@@ -28,6 +28,18 @@ set(BUILD_TESTING OFF)
 set(EIGEN_BUILD_PKGCONFIG OFF)
 FetchContent_MakeAvailable(Eigen)
 
+FetchContent_Declare(
+        assimp
+        GIT_REPOSITORY https://github.com/assimp/assimp.git
+        GIT_TAG master)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_INJECT_DEBUG_POSTFIX OFF CACHE BOOL "" FORCE)
+set(ASSIMP_INSTALL OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(assimp)
+
+set(CMAKE_CXX_FLAGS "-O3")
+
 add_executable(RayCaster
         main.cpp
 
@@ -36,6 +48,8 @@ add_executable(RayCaster
         Color.h
         Lights.h
         MathUtils.h
+        Mesh.h
+        Pattern.h
         RayCaster.h
         Sphere.h
         Shape.h
@@ -44,12 +58,15 @@ add_executable(RayCaster
         Canvas.cpp
         Cylinder.cpp
         Cube.cpp
+        Mesh.cpp
         Transform.cpp
+        Triangle.cpp
         Sphere.cpp
         RayCaster.cpp
         MathUtils.cpp
-        )
-target_link_libraries(RayCaster Eigen3::Eigen)
+        World.cpp
+        SmoothTriangle.cpp SmoothTriangle.h MeshSmooth.cpp MeshSmooth.h)
+target_link_libraries(RayCaster Eigen3::Eigen assimp)
 
 add_executable(RayCasterTest
         test.cpp
@@ -81,5 +98,5 @@ add_executable(RayCasterTest
         RayCaster.cpp
         Transform.cpp
         World.cpp
-        Patterns.h Cube.cpp Cube.h Cylinder.cpp Cylinder.h)
-target_link_libraries(RayCasterTest gtest gtest_main Eigen3::Eigen)
+        Patterns.h Cube.cpp Cube.h Cylinder.cpp Cylinder.h Triangle.cpp Triangle.h Mesh.cpp Mesh.h SmoothTriangle.cpp)
+target_link_libraries(RayCasterTest gtest gtest_main Eigen3::Eigen assimp)

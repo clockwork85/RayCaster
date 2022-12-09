@@ -13,7 +13,7 @@ using Matrix4f = Eigen::Matrix4f;
 
 
 struct Sphere : public Shape {
-    Vector4f local_normal_at(const Vector4f& local_point) const override;
+    Vector4f local_normal_at(const Vector4f& local_point, const Intersection& i) const override;
     std::vector<Intersection> local_intersect(const Ray& local_ray) const override;
 };
 

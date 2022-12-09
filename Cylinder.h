@@ -9,7 +9,7 @@
 
 class Cylinder : public Shape {
 public:
-    Vector4f local_normal_at(const Vector4f& point) const override;
+    Vector4f local_normal_at(const Vector4f& point, const Intersection& i={}) const override;
     std::vector<Intersection> local_intersect(const Ray& ray) const override;
     bool check_cap(const Ray& ray, float t) const;
     void intersect_caps(const Ray& ray, std::vector<Intersection>& xs) const;

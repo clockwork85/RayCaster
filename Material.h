@@ -34,8 +34,21 @@ public:
 };
 
 // Glass material
-inline Material glass() {
-    return Material(Color(1.0, 1.0, 1.0), 0.0, 0.5, 0.5, 200.0, 0.0, 1.0, 1.5, nullptr);
-}
+//inline Material glass() {
+//    return Material(Color(1.0, 1.0, 1.0), 0.0, 0.5, 0.5, 200.0, 0.0, 1.0, 1.5, nullptr);
+//}
+
+const Material glass
+        {
+                Colors::BLACK,  // color
+                0,      // ambient
+                0,      // diffuse
+                1,      // specular
+                300,    // shininess
+                0.9,    // reflective
+                1,      // transparency
+                1.5,     // refractive index
+                nullptr // pattern
+        };
 
 #endif //RAYCASTER_MATERIAL_H

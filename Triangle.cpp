@@ -27,6 +27,6 @@ std::vector<Intersection> Triangle::local_intersect(const Ray& ray) const {
     return xs;
 }
 
-Vector4f Triangle::local_normal_at(const Vector4f& point) const {
+Vector4f Triangle::local_normal_at(const Vector4f& point, const Intersection& i) const {
     return normal;
 }

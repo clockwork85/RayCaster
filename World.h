@@ -10,6 +10,10 @@
 #include "Lights.h"
 #include "Shape.h"
 #include "Transform.h"
+#include "Patterns.h"
+#include "Sphere.h"
+#include "Plane.h"
+#include "Cube.h"
 
 
 // For reference to understand push_back and emplace_back

@@ -60,6 +60,6 @@ bool Cylinder::check_cap(const Ray& ray, float t) const {
 
 
 
-Vector4f Cylinder::local_normal_at(const Vector4f& local_point) const {
+Vector4f Cylinder::local_normal_at(const Vector4f& local_point, const Intersection& i) const {
     return create_vector(local_point.x(), 0, local_point.z());
 }

@@ -17,6 +17,7 @@
 // #include <Eigen/Geometry>
 #include <vector>
 #include <iostream>
+#include <future>
 
 using Vector4f = Eigen::Vector4f;
 
@@ -38,7 +39,7 @@ float schlick(const Computation& comps);
 Ray ray_for_pixel(const Camera& camera, const int px, const int py, const float x_offset=0.0f, const float y_offset=0.0f);
 Canvas render(const Camera& camera, const World& world);
 Canvas render_whitted_norecurs(const Camera& camera, const World& world);
-Canvas render_stratified_jittering(const Camera& camera, const World& world);
+Canvas render_stratified_jittering(const Camera& camera, const World& world, const bool multiprocessing=false);
 Canvas render_aa(const Camera& camera, const World& world);
 
 // float intensity_at(const Light* light,      const Vector4f& point, const World& world);

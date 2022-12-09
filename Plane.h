@@ -10,7 +10,7 @@
 
 struct Plane : public Shape
 {
-    inline Vector4f local_normal_at(const Vector4f& local_point) const override
+    inline Vector4f local_normal_at(const Vector4f& local_point, const Intersection& i={}) const override
     {
         return create_vector(0, 1, 0);
     }

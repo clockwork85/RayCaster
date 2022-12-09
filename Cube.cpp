@@ -18,7 +18,7 @@ std::vector<Intersection> Cube::local_intersect(const Ray& ray) const {
     return {Intersection(t_min, this), Intersection(t_max, this)};
 }
 
-Vector4f Cube::local_normal_at(const Vector4f& point) const {
+Vector4f Cube::local_normal_at(const Vector4f& point, const Intersection& i) const {
     auto max_c = std::max(std::max(fabs(point.x()), fabs(point.y())), fabs(point.z()));
 
     if(is_equal(max_c, fabs(point.x()))) {

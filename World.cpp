@@ -2,9 +2,6 @@
 // Created by Bray, Matthew D ERDC-RDE-GSL-MS CIV on 11/20/22.
 //
 
-#include "Cube.h"
-#include "Plane.h"
-#include "Sphere.h"
 #include "World.h"
 
 World default_world() {
@@ -65,22 +62,35 @@ World cornell_box() {
 //    cube.set_transform(Transform::translate(-0.3, -0.5, -1.0) * Transform::scale(0.25, 0.5, 0.25) * Transform::rotate_y(M_PI / 3));
 //    sphere.set_transform(Transform::translate(0.6, -0.75, -2.5) * Transform::scale(0.25, 0.25, 0.25));
 //    sphere2.set_transform(Transform::translate(-0.6, -0.75, -2.5) * Transform::scale(0.25, 0.25, 0.25));
+    Sphere egg1 = Sphere();
+    // Transform sphere into egg shape
+    egg1.set_transform(Transform::translate(0.6, -0.75, -3.0) * Transform::scale(0.25, 0.33, 0.25) * Transform::shear(0.0, 0.0, 0.0, 0.0, 0.0, 0.7));
+    egg1.material = glass;
+    egg1.material.ambient = 0.0;
+
+    Sphere egg2 = Sphere();
+    // Transform sphere into egg shape
+    egg2.set_transform(Transform::translate(-0.6, -0.75, -3.0) * Transform::scale(0.25, 0.33, 0.25) * Transform::shear(0.0, 0.0, 0.0, 0.0, 0.0, 0.7));
+    egg2.material.pattern = ring_pattern(Colors::BLUE, Colors::YELLOW);
+    egg2.material.pattern->set_transform(Transform::scale(0.33, 0.33, 0.33));
 
 
-    const auto pointLight = PointLight(create_point(0.0, 0.8, -2), Color(1.0, 1.0, 1.0));
-//    const auto areaLight = AreaLight{create_point(-0.1, 0.9, -2.1), create_vector(0.25, 0, 0), 8, create_vector(0, 0, 0.25), 8, Color{1.0, 1.0, 1.0}};
+//    const auto pointLight = PointLight(create_point(0.0, 0.8, -3.7), Color(1.0, 1.0, 1.0));
+    const auto areaLight = AreaLight{create_point(-0.1, 0.9, -3.6), create_vector(0.25, 0, 0), 2, create_vector(0, 0, 0.25), 2, Color{1.0, 1.0, 1.0}};
 
     World world;
-    world.add_light(pointLight);
+    world.add_light(areaLight);
 
     world.add_object(left_wall);
     world.add_object(right_wall);
     world.add_object(back_wall);
     world.add_object(floor);
     world.add_object(ceiling);
-    world.add_object(cube);
+//    world.add_object(cube);
 //    world.add_object(sphere);
 //    world.add_object(sphere2);
+    world.add_object(egg1);
+    world.add_object(egg2);
 
     return world;
 }

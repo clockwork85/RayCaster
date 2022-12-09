@@ -44,15 +44,15 @@ struct Shape
         return m_inverse_transform;
     }
 
-    [[nodiscard]] virtual Vector4f normal_at(const Vector4f& world_point) const {
+    [[nodiscard]] virtual Vector4f normal_at(const Vector4f& world_point, const Intersection& i={}) const {
         const Vector4f local_point = m_inverse_transform * world_point;
-        const Vector4f local_normal = local_normal_at(local_point);
+        const Vector4f local_normal = local_normal_at(local_point, i);
         Vector4f world_normal = m_inverse_transform.transpose() * local_normal;
         world_normal[3] = 0;
         return world_normal.normalized();
     }
 
-    [[nodiscard]] virtual Vector4f local_normal_at(const Vector4f& world_point) const = 0;
+    [[nodiscard]] virtual Vector4f local_normal_at(const Vector4f& world_point, const Intersection& i={}) const = 0;
 
     [[nodiscard]] std::vector<Intersection> intersect(const Ray& r) const {
         const auto local_ray = r.transform_ray(m_inverse_transform);

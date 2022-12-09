@@ -16,7 +16,7 @@ public:
         normal = e2.cross3(e1).normalized();
     }
 
-    Vector4f local_normal_at(const Vector4f& point) const override;
+    Vector4f local_normal_at(const Vector4f& point, const Intersection& i={}) const override;
     std::vector<Intersection> local_intersect(const Ray& ray) const override;
 
     Vector4f p1;

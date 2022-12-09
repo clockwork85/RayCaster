@@ -6,6 +6,7 @@
 #include "Color.h"
 #include "MathUtils.h"
 #include "Mesh.h"
+#include "MeshSmooth.h"
 #include "Plane.h"
 #include "Patterns.h"
 #include "RayCaster.h"
@@ -47,8 +48,8 @@ float random_float() {
 
 int main() {
 
-    int height = 500;
-    int width = 250;
+    int height = 1000;
+    int width = 500;
 
 //    auto floor = Plane();
 //    floor.material.color = Color(1, 0.9, 0.9);
@@ -115,13 +116,18 @@ int main() {
 ////    large_sphere.set_transform(Transform::translate(1.0f, 1.0f, 1.0f) * Transform::rotate_y(M_PI / 6));
 ////    large_sphere.material.color = Color(0.1f, 0.1f, 0.8f);
     Mesh mesh;
-    mesh.load_mesh("bunny_lp.obj");
+    mesh.load_mesh("bunny_n.obj");
 //    mesh.set_transform(Transform::translate(0.0f, -0.37f, 1.5f) * Transform::scale(15.0f, 15.0f, 15.0f));
-    mesh.set_transform(Transform::translate(0.0f, -0.23f, -0.5f) * Transform::scale(5.0f, 5.0f, 5.0f) * Transform::rotate_y(M_PI));
+    mesh.set_transform(Transform::translate(-0.1f, -1.20f, -2.55f) * Transform::scale(7.0f, 7.0f, 7.0f) * Transform::rotate_y(M_PI));
 
     Material m = Material();
-    m.color = Color(0.9961, 0.0039, 0.6039);
-    m.reflective = 0.5;
+//    m.color = Color(0.9961, 0.0039, 0.6039);
+    // Color is opaque white
+    m.color = Color(0.99, 0.99, 0.99);
+    m.ambient = 0.1;
+    m.diffuse = 0.9;
+    m.specular = 0.9;
+    m.reflective = 0.05;
     mesh.set_material(m);
 //    World world;
 ////    for(int i = 0; i <= 20; i++) {
@@ -182,10 +188,17 @@ int main() {
     for(auto& tri: mesh.triangles) {
         cornell.add_object(tri);
     }
+//    const auto pointLight2 = PointLight(create_point(0.0, 1.0, 3.0), Color(0.2, 0.2, 0.2));
+//    cornell.add_light(pointLight2);
 //    Canvas canvas = render_stratified_jittering(camera, cornell);
+    // Time render
+    auto start = std::chrono::high_resolution_clock::now();
 //    Canvas canvas = render(camera, cornell);
     Canvas canvas = render_stratified_jittering(camera, cornell);
-    canvas.save_to_file("cornell_bunny.ppm");
+    auto finish = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = finish - start;
+    std::cout << "Time to render: " << elapsed.count() << " s\n";
+    canvas.save_to_file("bunny_hr_al_sj_500.ppm");
 
     return 0;
 }

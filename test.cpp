@@ -22,6 +22,7 @@
 #include "Plane.h"
 #include "RayCaster.h"
 #include "Sphere.h"
+#include "SmoothTriangle.h"
 #include "Transform.h"
 #include "Triangle.h"
 #include "World.h"
@@ -2159,6 +2160,55 @@ TEST(TestTris, TestTriangulatingPolygons) {
     EXPECT_EQ(mesh.triangles.size(), 2);
 }
 
+TEST(TestSmooth, TestSmoothTriangleInstantiation) {
+    const auto p1 = create_point(0, 1, 0);
+    const auto p2 = create_point(-1, 0, 0);
+    const auto p3 = create_point(1, 0, 0);
+    const auto n1 = create_vector(0, 1, 0);
+    const auto n2 = create_vector(-1, 0, 0);
+    const auto n3 = create_vector(1, 0, 0);
+    const auto t = SmoothTriangle(p1, p2, p3, n1, n2, n3);
+    EXPECT_TRUE(t.p1.isApprox(p1));
+    EXPECT_TRUE(t.p2.isApprox(p2));
+    EXPECT_TRUE(t.p3.isApprox(p3));
+    EXPECT_TRUE(t.n1.isApprox(n1));
+    EXPECT_TRUE(t.n2.isApprox(n2));
+    EXPECT_TRUE(t.n3.isApprox(n3));
+}
+
+TEST(TestSmooth, TestIntersectionCanEncapsulateUandV) {
+    const auto t = SmoothTriangle(create_point(0, 1, 0), create_point(-1, 0, 0), create_point(1, 0, 0), create_vector(0, 1, 0), create_vector(-1, 0, 0), create_vector(1, 0, 0));
+    const auto i = Intersection{3.5, &t, 0.2, 0.4};
+    EXPECT_FLOAT_EQ(i.u, 0.2);
+    EXPECT_FLOAT_EQ(i.v, 0.4);
+}
+
+TEST(TestSmooth, TestIntersectionWithASmoothTriangleStoresUandV) {
+    const auto t = SmoothTriangle(create_point(0, 1, 0), create_point(-1, 0, 0), create_point(1, 0, 0), create_vector(0, 1, 0), create_vector(-1, 0, 0), create_vector(1, 0, 0));
+    const auto r = Ray(create_point(-0.2, 0.3, -2), create_vector(0, 0, 1));
+    const auto xs = t.local_intersect(r);
+    EXPECT_EQ(xs.size(), 1);
+    EXPECT_FLOAT_EQ(xs[0].u, 0.45);
+    EXPECT_FLOAT_EQ(xs[0].v, 0.25);
+}
+
+TEST(TestSmooth, TestASmoothTriangleUsesUVtoInterpolateTheNormal) {
+    const auto t = SmoothTriangle(create_point(0, 1, 0), create_point(-1, 0, 0), create_point(1, 0, 0),
+                                  create_vector(0, 1, 0), create_vector(-1, 0, 0), create_vector(1, 0, 0));
+    const auto i = Intersection{1, &t, 0.45, 0.25};
+    const auto n = t.normal_at(create_point(0, 0, 0), i);
+    EXPECT_TRUE(n.isApprox(create_vector(-0.5547, 0.83205, 0)));
+}
+
+TEST(TestSmooth, TestPreparingTheNormalOnASmoothTriangle) {
+    const auto t = SmoothTriangle(create_point(0, 1, 0), create_point(-1, 0, 0), create_point(1, 0, 0),
+                                  create_vector(0, 1, 0), create_vector(-1, 0, 0), create_vector(1, 0, 0));
+    const auto i = Intersection{1, &t, 0.45, 0.25};
+    const auto r = Ray(create_point(-0.2, 0.3, -2), create_vector(0, 0, 1));
+    const auto xs = t.local_intersect(r);
+    const auto comps = prepare_computations(i, r, xs);
+    EXPECT_TRUE(comps.normalv.isApprox(create_vector(-0.5547, 0.83205, 0)));
+}
 
 
 int main(int argc, char **argv) {
